@@ -7,38 +7,62 @@ import L from "leaflet";
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadowUrl from "leaflet/dist/images/marker-shadow.png";
 import RoutingMachine from "./RoutingMachine";
-const kathmanduLocations = [
+const kathmanduLocations: {
+  type: string;
+  coordinate: [number, number];
+}[] = [
   { type: "Police", coordinate: [27.7172, 85.324] }, // Kathmandu Durbar Square
-  { type: "Traffic", coordinate: [27.712, 85.3123] }, // Swayambhunath
+  { type: "Medic", coordinate: [27.712, 85.3123] }, // Swayambhunath
   { type: "FireFighter", coordinate: [27.7215, 85.362] }, // Boudhanath
   { type: "Police", coordinate: [27.715, 85.29] }, // Kirtipur
-  { type: "Traffic", coordinate: [27.7426, 85.3015] }, // Balaju
+  { type: "Medic", coordinate: [27.7426, 85.3015] }, // Balaju
   { type: "FireFighter", coordinate: [27.7066, 85.3305] }, // Thamel
   { type: "Police", coordinate: [27.6846, 85.3182] }, // Patan Durbar Square
-  { type: "Traffic", coordinate: [27.671, 85.4298] }, // Bhaktapur Durbar Square
+  { type: "Medic", coordinate: [27.671, 85.4298] }, // Bhaktapur Durbar Square
   { type: "FireFighter", coordinate: [27.6939, 85.281] }, // Kalanki
   { type: "Police", coordinate: [27.7041, 85.304] }, // Teku
-  { type: "Traffic", coordinate: [27.734, 85.335] }, // Lazimpat
+  { type: "Medic", coordinate: [27.734, 85.335] }, // Lazimpat
   { type: "FireFighter", coordinate: [27.7366, 85.343] }, // Maharajgunj
   { type: "Police", coordinate: [27.7285, 85.345] }, // Teaching Hospital Area
-  { type: "Traffic", coordinate: [27.698, 85.359] }, // Koteshwor
+  { type: "Medic", coordinate: [27.698, 85.359] }, // Koteshwor
   { type: "FireFighter", coordinate: [27.6915, 85.342] }, // Baneshwor
   { type: "Police", coordinate: [27.7, 85.333] }, // New Baneshwor
-  { type: "Traffic", coordinate: [27.71, 85.348] }, // Gaushala
+  { type: "Medic", coordinate: [27.71, 85.348] }, // Gaushala
   { type: "FireFighter", coordinate: [27.739, 85.365] }, // Gokarna
   { type: "Police", coordinate: [27.785, 85.332] }, // Budhanilkantha
-  { type: "Traffic", coordinate: [27.754, 85.318] }, // Gongabu
+  { type: "Medic", coordinate: [27.754, 85.318] }, // Gongabu
   { type: "FireFighter", coordinate: [27.755, 85.346] }, // Tokha
   { type: "Police", coordinate: [27.665, 85.329] }, // Jawalakhel
-  { type: "Traffic", coordinate: [27.664, 85.318] }, // Lagankhel
+  { type: "Medic", coordinate: [27.664, 85.318] }, // Lagankhel
   { type: "FireFighter", coordinate: [27.65, 85.307] }, // Bungamati
   { type: "Police", coordinate: [27.646, 85.322] }, // Khokana
-  { type: "Traffic", coordinate: [27.68, 85.395] }, // Thimi
+  { type: "Medic", coordinate: [27.68, 85.395] }, // Thimi
   { type: "FireFighter", coordinate: [27.673, 85.438] }, // Suryabinayak
   { type: "Police", coordinate: [27.73, 85.38] }, // Jorpati
-  { type: "Traffic", coordinate: [27.705, 85.27] }, // Thankot
+  { type: "Medic", coordinate: [27.705, 85.27] }, // Thankot
   { type: "FireFighter", coordinate: [27.743, 85.37] }, // Sundarijal
 ];
+
+const imageObj: Record<string, L.Icon<L.IconOptions>> = {
+  FireFighter: L.icon({
+    iconUrl: "../../public/fire truck.svg",
+    iconSize: [38, 95],
+    iconAnchor: [22, 94],
+    popupAnchor: [-3, -76],
+  }),
+  Police: L.icon({
+    iconUrl: "../../public/police.svg",
+    iconSize: [38, 95],
+    iconAnchor: [22, 94],
+    popupAnchor: [-3, -76],
+  }),
+  Medic: L.icon({
+    iconUrl: "../../public/ambulance.svg",
+    iconSize: [38, 95],
+    iconAnchor: [22, 94],
+    popupAnchor: [-3, -76],
+  }),
+};
 
 const DefaultIcon = L.icon({
   iconUrl,
@@ -73,7 +97,6 @@ const Homepage: React.FC = () => {
     lastName: "Doe",
   };
   const initials = `${user.firstName[0]}${user.lastName[0]}`;
-
   // Fetch actual device location on mount
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -119,8 +142,8 @@ const Homepage: React.FC = () => {
           />
           <MapRecenter position={position} />
 
-          {kathmanduLocations.map((obj) => (
-            <Marker position={obj.coordinate}>
+          {kathmanduLocations?.map((obj) => (
+            <Marker position={obj.coordinate} icon={imageObj[obj.type]}>
               <Popup>
                 <div className="text-center">
                   <p className="font-bold">{obj.type}</p>
