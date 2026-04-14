@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from './prisma.module';
 import { LocationModule } from './location/location.module';
 import { RedisModule } from './redis.module';
+import { AlertModule } from './alert/alert.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { RedisModule } from './redis.module';
     PrismaModule,
     LocationModule,
     RedisModule,
+    AlertModule,
   ],
   controllers: [AppController],
   providers: [AppService],

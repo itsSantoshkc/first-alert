@@ -1,15 +1,9 @@
 import { Type } from 'class-transformer';
 import {
-  IsAlphanumeric,
-  IsEmail,
-  IsEnum,
   IsLatitude,
   IsLongitude,
   IsNotEmpty,
-  IsOptional,
-  IsPhoneNumber,
   IsString,
-  MinLength,
   ValidateNested,
 } from 'class-validator';
 

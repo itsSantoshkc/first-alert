@@ -1,14 +1,12 @@
-import "./App.css";
-import LoginPage from "./Auth/Login/Login";
-import SignUpPage from "./Auth/Register/Signup";
-import HomePage from "./User/HomePage";
+// src/App.tsx
+import { Outlet } from "@tanstack/react-router";
+import Navbar from "./User/components/Navbar";
 
-function App() {
+export default function App() {
   return (
     <>
-      <HomePage />
+      <Navbar />
+      <Outlet /> {/* existing pages render here */}
     </>
   );
 }
-
-export default App;

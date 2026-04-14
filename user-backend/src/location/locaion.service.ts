@@ -3,12 +3,26 @@ import { Inject, Injectable } from '@nestjs/common';
 import { type RedisClientType } from 'redis';
 import { REDIS_CLIENT } from '../redis.module';
 import { RespondersAroundUserDto } from './dto/responders-around-user';
+import { RespondentLiveLocationDto } from './dto/respondent-live-location';
 @Injectable()
 export class LocationService {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClientType) {}
 
   getHello(): string {
     return 'Hello World!';
+  }
+
+  async updateRespondentsLiveLocation(
+    respondentLiveLocationDto: RespondentLiveLocationDto,
+    respondentId: string,
+  ) {
+    const redisResponderKey = `responders:${respondentLiveLocationDto.responderType.toLowerCase()}`;
+    // Update the data here
+    const res = await this.redis.geoAdd(redisResponderKey, {
+      longitude: respondentLiveLocationDto.userLocation.longitude,
+      latitude: respondentLiveLocationDto.userLocation.latitude,
+      member: respondentId,
+    });
   }
 
   async getRespondersAroundUser(
