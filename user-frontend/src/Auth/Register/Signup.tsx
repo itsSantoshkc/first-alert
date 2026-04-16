@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
+import { useRouter } from "@tanstack/react-router";
+import { useAuth } from "../../contexts/AuthContext";
 
 const signUpSchema = z
   .object({
@@ -22,6 +24,9 @@ const signUpSchema = z
 type SignUpData = z.infer<typeof signUpSchema>;
 
 const SignUpPage: React.FC = () => {
+  const { setAuth } = useAuth();
+  const router = useRouter();
+
   const [formData, setFormData] = useState<SignUpData>({
     firstName: "",
     lastName: "",
@@ -61,8 +66,16 @@ const SignUpPage: React.FC = () => {
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: registerUser,
-    onSuccess: () => {
-      alert("Account created successfully!");
+    onSuccess: (data) => {
+      const { accessToken, userData } = data;
+      setAuth({
+        user: userData,
+        accessToken: accessToken,
+      });
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("accessToken", accessToken);
+      router.navigate({ to: "/" });
+
       setErrors({});
     },
   });

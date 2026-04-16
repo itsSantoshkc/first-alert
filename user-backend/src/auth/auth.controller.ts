@@ -42,7 +42,7 @@ export class AuthController {
     const { accessToken, refreshToken, user } =
       await this.authService.signUp(createUserDto);
     await res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
-    return { access_token: accessToken, userData: user };
+    return { accessToken: accessToken, userData: user };
   }
 
   @Post('login')
@@ -53,8 +53,9 @@ export class AuthController {
   ) {
     const { accessToken, refreshToken, user } =
       await this.authService.logIn(logInDto);
-    await res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
-    return { access_token: accessToken, userData: user };
+    res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
+    console.log(user);
+    return { accessToken: accessToken, userData: user };
   }
 
   @Post('refresh')
@@ -63,6 +64,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    console.log(req.cookies);
     const token = req.cookies?.refreshToken;
     console.log(req);
     const { access_token, refresh_token } =
@@ -70,7 +72,7 @@ export class AuthController {
 
     res.cookie('refreshToken', refresh_token, REFRESH_COOKIE_OPTIONS);
 
-    return { access_token: access_token };
+    return { accessToken: access_token };
   }
 
   @UseGuards(new JwtAuthGuard())

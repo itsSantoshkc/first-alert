@@ -1,10 +1,16 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
-import Map from "../components/Map";
-import EmergencyAlert from "../User/components/EmergencyAlert";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import Navbar from "../User/components/Navbar";
 
 export const Route = createFileRoute("/_userLayout")({
   component: RouteComponent,
+  beforeLoad: () => {
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      throw redirect({
+        to: "/auth/login",
+      });
+    }
+  },
 });
 
 function RouteComponent() {
@@ -12,10 +18,6 @@ function RouteComponent() {
     <div className="relative h-screen w-full font-sans overflow-hidden bg-[#FDF8EF] text-[#1a1a1a]">
       <Navbar />
       <Outlet />
-      <div className="absolute inset-0 z-0">
-        <Map />
-      </div>
-      <EmergencyAlert />
     </div>
   );
 }

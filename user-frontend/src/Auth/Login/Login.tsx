@@ -2,20 +2,23 @@ import React, { useState } from "react";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "../../contexts/AuthContext";
+import { useRouter } from "@tanstack/react-router";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 type LoginData = z.infer<typeof loginSchema>;
 
 const LoginPage: React.FC = () => {
+  const { setAuth } = useAuth();
+  const router = useRouter();
+
   const [formData, setFormData] = useState<LoginData>({
     email: "",
     password: "",
   });
-  const { setAuth } = useAuth();
 
   const [errors, setErrors] = useState<Record<any, any>>({});
 
@@ -32,6 +35,7 @@ const LoginPage: React.FC = () => {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(data),
     });
 
@@ -51,6 +55,9 @@ const LoginPage: React.FC = () => {
         user: userData,
         accessToken: accessToken,
       });
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("accessToken", accessToken);
+      router.navigate({ to: "/" });
     },
     onError: (err) => {
       console.error(err.message);

@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { user } = useAuth();
 
-  const user = {
-    firstName: "John",
-    lastName: "Doe",
-  };
-  const initials = `${user.firstName[0]}${user.lastName[0]}`;
+  const initials = `${user?.firstName[0]}${user?.lastName[0]}`;
   const dropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // Click outside to close dropdown handler
@@ -54,15 +52,15 @@ const Navbar = () => {
           <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 py-2 overflow-hidden transform origin-top-right transition-all">
             <div className="px-4 py-3 border-b border-gray-100 mb-1">
               <p className="text-sm font-bold text-gray-900">
-                {user.firstName} {user.lastName}
+                {user?.firstName} {user?.lastName}
               </p>
-              <p className="text-xs text-gray-500 truncate">Agent Account</p>
+              <p className="text-xs text-gray-500 truncate">User Account</p>
             </div>
 
-            <button className="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition">
+            <button className="w-full cursor-pointer text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-100 transition">
               Profile
             </button>
-            <button className="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition">
+            <button className="w-full text-left px-4 cursor-pointer py-2.5 text-sm font-medium hover:bg-gray-100 transition">
               Alert History
             </button>
 
@@ -70,7 +68,7 @@ const Navbar = () => {
 
             <button
               onClick={() => console.log("Logging out...")}
-              className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition"
+              className="w-full cursor-pointer text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition"
             >
               Log Out
             </button>

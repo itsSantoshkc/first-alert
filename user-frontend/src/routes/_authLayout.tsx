@@ -1,7 +1,16 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { isTokenExpired } from "../utilities/jwtHelper";
 
 export const Route = createFileRoute("/_authLayout")({
   component: RouteComponent,
+  beforeLoad: () => {
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken && !isTokenExpired(accessToken)) {
+      throw redirect({
+        to: "/",
+      });
+    }
+  },
 });
 
 function RouteComponent() {

@@ -10,6 +10,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   accessToken: string | null;
+  setAccessToken: (accessToken: string) => void;
+  setUser: (data: User) => void;
   setAuth: (data: { user: User; accessToken: string } | null) => void;
 }
 
@@ -19,19 +21,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const setAuth = (data: { user: User; accessToken: string } | null) => {
+  const localStorageUser = localStorage.getItem("user");
+  const localStorageAccessToken = localStorage.getItem("accessToken");
+
+  if (!user && localStorageUser) {
+    setUser(JSON.parse(localStorageUser));
+  }
+  if (!accessToken && localStorageAccessToken) {
+    setAccessToken(localStorageAccessToken);
+  }
+
+  const setAuth = (data: { user?: User; accessToken?: string } | null) => {
     if (!data) {
       setUser(null);
       setAccessToken(null);
       return;
     }
-
-    setUser(data.user);
-    setAccessToken(data.accessToken);
+    if (data.user) {
+      setUser(data.user);
+    }
+    if (data.accessToken) {
+      setAccessToken(data.accessToken);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, setAuth }}>
+    <AuthContext.Provider
+      value={{ user, accessToken, setAuth, setAccessToken, setUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

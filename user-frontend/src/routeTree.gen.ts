@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UserLayoutRouteImport } from './routes/_userLayout'
 import { Route as AuthLayoutRouteImport } from './routes/_authLayout'
 import { Route as RespondentIndexRouteImport } from './routes/respondent/index'
+import { Route as UserLayoutIndexRouteImport } from './routes/_userLayout/index'
 import { Route as DashboardDashboardLayoutRouteImport } from './routes/dashboard/_dashboardLayout'
+import { Route as UserLayoutProfileRouteImport } from './routes/_userLayout/profile'
 import { Route as AuthLayoutAuthSignupRouteImport } from './routes/_authLayout/auth/signup'
 import { Route as AuthLayoutAuthLoginRouteImport } from './routes/_authLayout/auth/login'
 
@@ -29,12 +31,22 @@ const RespondentIndexRoute = RespondentIndexRouteImport.update({
   path: '/respondent/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UserLayoutIndexRoute = UserLayoutIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => UserLayoutRoute,
+} as any)
 const DashboardDashboardLayoutRoute =
   DashboardDashboardLayoutRouteImport.update({
     id: '/dashboard/_dashboardLayout',
     path: '/dashboard',
     getParentRoute: () => rootRouteImport,
   } as any)
+const UserLayoutProfileRoute = UserLayoutProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => UserLayoutRoute,
+} as any)
 const AuthLayoutAuthSignupRoute = AuthLayoutAuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
@@ -47,14 +59,16 @@ const AuthLayoutAuthLoginRoute = AuthLayoutAuthLoginRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof UserLayoutRoute
+  '/': typeof UserLayoutIndexRoute
+  '/profile': typeof UserLayoutProfileRoute
   '/dashboard': typeof DashboardDashboardLayoutRoute
   '/respondent/': typeof RespondentIndexRoute
   '/auth/login': typeof AuthLayoutAuthLoginRoute
   '/auth/signup': typeof AuthLayoutAuthSignupRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof UserLayoutRoute
+  '/': typeof UserLayoutIndexRoute
+  '/profile': typeof UserLayoutProfileRoute
   '/dashboard': typeof DashboardDashboardLayoutRoute
   '/respondent': typeof RespondentIndexRoute
   '/auth/login': typeof AuthLayoutAuthLoginRoute
@@ -63,8 +77,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authLayout': typeof AuthLayoutRouteWithChildren
-  '/_userLayout': typeof UserLayoutRoute
+  '/_userLayout': typeof UserLayoutRouteWithChildren
+  '/_userLayout/profile': typeof UserLayoutProfileRoute
   '/dashboard/_dashboardLayout': typeof DashboardDashboardLayoutRoute
+  '/_userLayout/': typeof UserLayoutIndexRoute
   '/respondent/': typeof RespondentIndexRoute
   '/_authLayout/auth/login': typeof AuthLayoutAuthLoginRoute
   '/_authLayout/auth/signup': typeof AuthLayoutAuthSignupRoute
@@ -73,17 +89,26 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/profile'
     | '/dashboard'
     | '/respondent/'
     | '/auth/login'
     | '/auth/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/respondent' | '/auth/login' | '/auth/signup'
+  to:
+    | '/'
+    | '/profile'
+    | '/dashboard'
+    | '/respondent'
+    | '/auth/login'
+    | '/auth/signup'
   id:
     | '__root__'
     | '/_authLayout'
     | '/_userLayout'
+    | '/_userLayout/profile'
     | '/dashboard/_dashboardLayout'
+    | '/_userLayout/'
     | '/respondent/'
     | '/_authLayout/auth/login'
     | '/_authLayout/auth/signup'
@@ -91,7 +116,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthLayoutRoute: typeof AuthLayoutRouteWithChildren
-  UserLayoutRoute: typeof UserLayoutRoute
+  UserLayoutRoute: typeof UserLayoutRouteWithChildren
   DashboardDashboardLayoutRoute: typeof DashboardDashboardLayoutRoute
   RespondentIndexRoute: typeof RespondentIndexRoute
 }
@@ -119,12 +144,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RespondentIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_userLayout/': {
+      id: '/_userLayout/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof UserLayoutIndexRouteImport
+      parentRoute: typeof UserLayoutRoute
+    }
     '/dashboard/_dashboardLayout': {
       id: '/dashboard/_dashboardLayout'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardDashboardLayoutRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_userLayout/profile': {
+      id: '/_userLayout/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof UserLayoutProfileRouteImport
+      parentRoute: typeof UserLayoutRoute
     }
     '/_authLayout/auth/signup': {
       id: '/_authLayout/auth/signup'
@@ -157,9 +196,23 @@ const AuthLayoutRouteWithChildren = AuthLayoutRoute._addFileChildren(
   AuthLayoutRouteChildren,
 )
 
+interface UserLayoutRouteChildren {
+  UserLayoutProfileRoute: typeof UserLayoutProfileRoute
+  UserLayoutIndexRoute: typeof UserLayoutIndexRoute
+}
+
+const UserLayoutRouteChildren: UserLayoutRouteChildren = {
+  UserLayoutProfileRoute: UserLayoutProfileRoute,
+  UserLayoutIndexRoute: UserLayoutIndexRoute,
+}
+
+const UserLayoutRouteWithChildren = UserLayoutRoute._addFileChildren(
+  UserLayoutRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   AuthLayoutRoute: AuthLayoutRouteWithChildren,
-  UserLayoutRoute: UserLayoutRoute,
+  UserLayoutRoute: UserLayoutRouteWithChildren,
   DashboardDashboardLayoutRoute: DashboardDashboardLayoutRoute,
   RespondentIndexRoute: RespondentIndexRoute,
 }
