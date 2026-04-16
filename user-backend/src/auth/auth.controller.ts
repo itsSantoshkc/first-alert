@@ -21,39 +21,40 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { Public } from '@prisma/client/runtime/client';
 import { type Request, type Response } from 'express';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
-  path: '/auth/refresh', // scoped — cookie only sent to this endpoint
+  secure: isProd, // true only in prod
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: '/',
 };
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('signUp')
+  @Post('signup')
   async signUp(
     @Body() createUserDto: CreateUserDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, refreshToken } =
+    const { accessToken, refreshToken, user } =
       await this.authService.signUp(createUserDto);
-    res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
-    return { access_token: accessToken };
+    await res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
+    return { access_token: accessToken, userData: user };
   }
 
-  @Post('logIn')
+  @Post('login')
   @HttpCode(HttpStatus.OK)
   async logIn(
     @Body() logInDto: LoginUserDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, refreshToken } =
+    const { accessToken, refreshToken, user } =
       await this.authService.logIn(logInDto);
-    res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
-    return { access_token: accessToken };
+    await res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
+    return { access_token: accessToken, userData: user };
   }
 
   @Post('refresh')

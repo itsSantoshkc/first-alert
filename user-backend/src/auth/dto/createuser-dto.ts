@@ -13,11 +13,11 @@ import { Role } from '../../generated/prisma/enums';
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
-  firstname!: string;
+  firstName!: string;
 
   @IsString()
   @IsNotEmpty()
-  lastname!: string;
+  lastName!: string;
 
   @IsEmail()
   @IsNotEmpty()

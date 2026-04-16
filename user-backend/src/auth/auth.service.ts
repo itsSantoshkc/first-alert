@@ -13,6 +13,7 @@ import bcrypt from 'bcrypt';
 import { Role } from '../generated/prisma/enums';
 import { ConfigService } from '@nestjs/config';
 import { LoginUserDto } from './dto/login-user-dto';
+import { create } from 'node:domain';
 
 @Injectable()
 export class AuthService {
@@ -152,6 +153,13 @@ export class AuthService {
     });
 
     return {
+      user: {
+        firstName: existing.firstname,
+        lastName: existing.lastname,
+        email: existing.email,
+        role: existing.role,
+      },
+
       accessToken: accessToken,
       refreshToken: refreshToken,
     };
@@ -172,8 +180,8 @@ export class AuthService {
       async (tx) => {
         const newUser = await tx.user.create({
           data: {
-            firstname: createUserDto.firstname,
-            lastname: createUserDto.lastname,
+            firstname: createUserDto.firstName,
+            lastname: createUserDto.lastName,
             email,
             phone: createUserDto.phone,
             location: createUserDto.location,
@@ -202,7 +210,10 @@ export class AuthService {
           },
         });
 
-        return { newUser, refreshToken };
+        return {
+          newUser,
+          refreshToken,
+        };
       },
     );
 
@@ -213,6 +224,12 @@ export class AuthService {
     );
 
     return {
+      user: {
+        firstName: newUser.firstname,
+        lastName: newUser.lastname,
+        email: newUser.email,
+        role: newUser.role,
+      },
       accessToken: accessToken,
       refreshToken: refreshToken,
     };
