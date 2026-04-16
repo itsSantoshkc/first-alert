@@ -37,7 +37,9 @@ export class AuthService {
     if (!token) {
       throw new UnauthorizedException('No refresh token provided');
     }
-    let payload: { sub: string; role?: Role };
+
+    let payload: { sub: string; role?: Role; jti?: string };
+
     try {
       payload = this.jwtService.verify(token, {
         secret: this.configService.getOrThrow<string>(
@@ -52,27 +54,35 @@ export class AuthService {
       }
       throw new UnauthorizedException('Invalid refresh token');
     }
-    const incomingHashToken = await bcrypt.hash(token, 10);
-    const storedToken = await this.prisma.refreshToken.findUnique({
-      where: { hashedToken: incomingHashToken },
+
+    const storedToken = await this.prisma.refreshToken.findFirst({
+      where: {
+        userId: payload.sub,
+      },
       include: { user: true },
     });
+
     if (!storedToken) {
-      await this.prisma.refreshToken.deleteMany({
-        where: { userId: payload.sub },
-      });
       throw new UnauthorizedException(
         'Refresh token reuse detected, all sessions revoked',
       );
     }
 
-    if (
-      storedToken.userId !== payload.sub ||
-      storedToken.expiresAt < new Date()
-    ) {
-      await this.prisma.refreshToken.delete({
-        where: { hashedToken: incomingHashToken },
+    const isValid = await bcrypt.compare(token, storedToken.hashedToken);
+
+    if (!isValid) {
+      await this.prisma.refreshToken.deleteMany({
+        where: { userId: payload.sub },
       });
+
+      throw new UnauthorizedException('Refresh token reuse detected');
+    }
+
+    if (storedToken.expiresAt < new Date()) {
+      await this.prisma.refreshToken.delete({
+        where: { id: storedToken.id },
+      });
+
       throw new UnauthorizedException('Refresh token invalid or expired');
     }
 
@@ -86,7 +96,10 @@ export class AuthService {
     });
 
     const newRefreshToken = this.jwtService.sign(
-      { sub: storedToken.user.userId },
+      {
+        sub: storedToken.user.userId,
+        role: storedToken.user.role,
+      },
       {
         secret: this.configService.getOrThrow<string>(
           'JWT_REFRESH_TOKEN_SECRET_KEY',
@@ -95,10 +108,11 @@ export class AuthService {
       },
     );
 
-    const newHash = await bcrypt.hash(token, 10);
+    const newHash = await bcrypt.hash(newRefreshToken, 10);
+
     await this.prisma.$transaction([
       this.prisma.refreshToken.delete({
-        where: { hashedToken: incomingHashToken },
+        where: { id: storedToken.id },
       }),
       this.prisma.refreshToken.create({
         data: {

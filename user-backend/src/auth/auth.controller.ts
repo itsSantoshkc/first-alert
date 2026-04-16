@@ -64,20 +64,12 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log(req.cookies);
     const token = req.cookies?.refreshToken;
-    console.log(req);
     const { access_token, refresh_token } =
       await this.authService.refreshToken(token);
 
     res.cookie('refreshToken', refresh_token, REFRESH_COOKIE_OPTIONS);
 
     return { accessToken: access_token };
-  }
-
-  @UseGuards(new JwtAuthGuard())
-  @Get('test')
-  findAll() {
-    return { message: 'Hello World' };
   }
 }
