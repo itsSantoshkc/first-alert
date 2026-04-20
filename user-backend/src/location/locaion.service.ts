@@ -29,19 +29,34 @@ export class LocationService {
     responderAroundUserDto: RespondersAroundUserDto,
   ) {
     const redisResponderKey = `responders:${responderAroundUserDto.responderType.toLowerCase()}`;
+    const maxRadius = 50;
+    let radius = 20;
 
-    const res = await this.redis.geoSearch(
-      redisResponderKey,
-      {
-        longitude: responderAroundUserDto.userLocation.longitude,
-        latitude: responderAroundUserDto.userLocation.latitude,
-      },
-      {
-        radius: 10,
-        unit: 'km',
-      },
-    );
-    return res;
+    while (radius <= maxRadius) {
+      const res = await this.redis.geoSearch(
+        redisResponderKey,
+        {
+          longitude: responderAroundUserDto.userLocation.longitude,
+          latitude: responderAroundUserDto.userLocation.latitude,
+        },
+        {
+          radius,
+          unit: 'km',
+        },
+      );
+
+      if (res.length > 0) {
+        return {
+          responders: res,
+        };
+      }
+
+      radius += 10;
+    }
+
+    return {
+      responders: [],
+    };
   }
 
   async populateData(): Promise<void> {

@@ -42,11 +42,10 @@ export class LocationController {
     );
   }
 
-  @Post('pos')
+  @Post('get-respondent-location')
   respondersAroundUser(
     @Body() responderAroundUserDto: RespondersAroundUserDto,
   ) {
-    console.log(responderAroundUserDto);
     return this.locationService.getRespondersAroundUser(responderAroundUserDto);
   }
 }

@@ -168,6 +168,7 @@ export class AuthService {
 
     return {
       user: {
+        userId: existing.userId,
         firstName: existing.firstname,
         lastName: existing.lastname,
         email: existing.email,
@@ -239,6 +240,7 @@ export class AuthService {
 
     return {
       user: {
+        userId: newUser.userId,
         firstName: newUser.firstname,
         lastName: newUser.lastname,
         email: newUser.email,

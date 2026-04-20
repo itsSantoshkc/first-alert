@@ -35,6 +35,9 @@ model User {
   updatedAt DateTime @updatedAt
 
   refreshTokens RefreshToken[]
+
+  alertsCreated   Alerts[] @relation("UserAlerts")
+  alertsResponded Alerts[] @relation("RespondentAlerts")
 }
 
 model RefreshToken {
@@ -47,4 +50,15 @@ model RefreshToken {
   createdAt    DateTime @default(now())
 
   @@index([userId])
+}
+
+
+model Alerts {
+  id            String @id @default(uuid())
+  userId        String
+  user          User   @relation("UserAlerts", fields: [userId], references: [userId])
+  respondentId  String
+  respondent    User   @relation("RespondentAlerts", fields: [respondentId], references: [userId])
+  latitude      Float
+  longitude     Float
 }

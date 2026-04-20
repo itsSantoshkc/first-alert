@@ -1,8 +1,65 @@
 import React, { useState } from "react";
+import { useFetchClient } from "../../utilities/useFetchClient";
+import { useMutation } from "@tanstack/react-query";
+import z from "zod";
+
+const alertType = z.enum(["Medic", "FireFighter", "Police"]);
+const alertSchema = z.object({
+  alertType: alertType,
+  latitude: z
+    .number({ error: "Latitude must be a number" })
+    .min(-90, "Latitude must be ≥ -90")
+    .max(90, "Latitude must be ≤ 90"),
+  longitude: z
+    .number({ error: "Longitude must be a number" })
+    .min(-180, "Longitude must be ≥ -180")
+    .max(180, "Longitude must be ≤ 180"),
+});
+
+type SendAlertData = z.infer<typeof alertSchema>;
+type AlertType = z.infer<typeof alertType>;
 
 const EmergencyAlert: React.FC = () => {
+  const { protectedFetch } = useFetchClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const sendAlerts = async (alertType: AlertType) => {
+    const data = {
+      latitude: 27.5878,
+      longitude: 85.3213,
+      alertType: alertType,
+    };
+    const result = alertSchema.safeParse(data);
+
+    if (result.success) {
+      return mutate(result.data);
+    }
+    return console.log(result.error);
+  };
+
+  const sendAlertToServer = async (data: SendAlertData) => {
+    const res = await protectedFetch("http://localhost:3000/alert/send-alert", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      throw new Error("Failed to fetch user profile");
+    }
+
+    return res.json();
+  };
+
+  const { mutate } = useMutation({
+    mutationFn: sendAlertToServer,
+    onSuccess: (data) => {
+      console.log(data);
+    },
+    onError: (err) => {
+      console.error(err.message);
+    },
+    //  async (alertData: SendAlertData) => {
+    //
+  });
   return (
     <>
       {/* --- FLOATING ALERT PILL --- */}
@@ -11,7 +68,6 @@ const EmergencyAlert: React.FC = () => {
           onClick={() => setIsModalOpen(true)}
           className="bg-red-600 hover:bg-red-700 text-white shadow-[0_0_40px_rgba(220,38,38,0.5)] rounded-full px-8 py-4 font-extrabold text-lg flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95"
         >
-          {/* Pulsing Dot */}
           <span className="relative flex h-4 w-4">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
             <span className="relative inline-flex rounded-full h-4 w-4 bg-white"></span>
@@ -20,7 +76,6 @@ const EmergencyAlert: React.FC = () => {
         </button>
       </div>
 
-      {/* --- MODAL OVERLAY --- */}
       {isModalOpen && (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           {/* Modal Container */}
@@ -45,7 +100,6 @@ const EmergencyAlert: React.FC = () => {
               </svg>
             </button>
 
-            {/* Modal Header */}
             <div className="text-center p-8 pb-4">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-2xl mb-4">
                 <svg
@@ -71,11 +125,9 @@ const EmergencyAlert: React.FC = () => {
               </p>
             </div>
 
-            {/* Services Grid */}
             <div className="p-8 pt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Police Card */}
               <button
-                onClick={() => console.log("Calling Police")}
+                onClick={() => sendAlerts("Police")}
                 className="group relative flex flex-col items-center p-8 bg-slate-50 hover:bg-blue-600 rounded-3xl border-2 border-slate-100 hover:border-blue-600 transition-all duration-300 shadow-sm hover:shadow-xl text-center"
               >
                 <div className="w-20 h-20 bg-blue-100 group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition-colors">
@@ -96,13 +148,11 @@ const EmergencyAlert: React.FC = () => {
                 </p>
               </button>
 
-              {/* Firefighter Card */}
               <button
-                onClick={() => console.log("Calling Firefighter")}
+                onClick={() => sendAlerts("FireFighter")}
                 className="group relative flex flex-col items-center p-8 bg-orange-50 hover:bg-orange-600 rounded-3xl border-2 border-orange-100 hover:border-orange-600 transition-all duration-300 shadow-sm hover:shadow-xl text-center"
               >
                 <div className="w-20 h-20 bg-orange-100 group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition-colors">
-                  {/* Flame Icon */}
                   <svg
                     className="w-10 h-10 text-orange-600"
                     fill="currentColor"
@@ -119,13 +169,11 @@ const EmergencyAlert: React.FC = () => {
                 </p>
               </button>
 
-              {/* Medic Card */}
               <button
-                onClick={() => console.log("Calling Medic")}
+                onClick={() => sendAlerts("Medic")}
                 className="group relative flex flex-col items-center p-8 bg-red-50 hover:bg-red-600 rounded-3xl border-2 border-red-100 hover:border-red-600 transition-all duration-300 shadow-sm hover:shadow-xl text-center"
               >
                 <div className="w-20 h-20 bg-red-100 group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition-colors">
-                  {/* Medical Cross Icon */}
                   <svg
                     className="w-10 h-10 text-red-600"
                     fill="currentColor"

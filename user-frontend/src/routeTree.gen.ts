@@ -10,11 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UserLayoutRouteImport } from './routes/_userLayout'
+import { Route as RespondentLayoutRouteImport } from './routes/_respondentLayout'
 import { Route as AuthLayoutRouteImport } from './routes/_authLayout'
-import { Route as RespondentIndexRouteImport } from './routes/respondent/index'
 import { Route as UserLayoutIndexRouteImport } from './routes/_userLayout/index'
 import { Route as DashboardDashboardLayoutRouteImport } from './routes/dashboard/_dashboardLayout'
 import { Route as UserLayoutProfileRouteImport } from './routes/_userLayout/profile'
+import { Route as RespondentLayoutRespondentIndexRouteImport } from './routes/_respondentLayout/respondent/index'
 import { Route as AuthLayoutAuthSignupRouteImport } from './routes/_authLayout/auth/signup'
 import { Route as AuthLayoutAuthLoginRouteImport } from './routes/_authLayout/auth/login'
 
@@ -22,13 +23,12 @@ const UserLayoutRoute = UserLayoutRouteImport.update({
   id: '/_userLayout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthLayoutRoute = AuthLayoutRouteImport.update({
-  id: '/_authLayout',
+const RespondentLayoutRoute = RespondentLayoutRouteImport.update({
+  id: '/_respondentLayout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RespondentIndexRoute = RespondentIndexRouteImport.update({
-  id: '/respondent/',
-  path: '/respondent/',
+const AuthLayoutRoute = AuthLayoutRouteImport.update({
+  id: '/_authLayout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UserLayoutIndexRoute = UserLayoutIndexRouteImport.update({
@@ -47,6 +47,12 @@ const UserLayoutProfileRoute = UserLayoutProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => UserLayoutRoute,
 } as any)
+const RespondentLayoutRespondentIndexRoute =
+  RespondentLayoutRespondentIndexRouteImport.update({
+    id: '/respondent/',
+    path: '/respondent/',
+    getParentRoute: () => RespondentLayoutRoute,
+  } as any)
 const AuthLayoutAuthSignupRoute = AuthLayoutAuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
@@ -62,28 +68,29 @@ export interface FileRoutesByFullPath {
   '/': typeof UserLayoutIndexRoute
   '/profile': typeof UserLayoutProfileRoute
   '/dashboard': typeof DashboardDashboardLayoutRoute
-  '/respondent/': typeof RespondentIndexRoute
   '/auth/login': typeof AuthLayoutAuthLoginRoute
   '/auth/signup': typeof AuthLayoutAuthSignupRoute
+  '/respondent/': typeof RespondentLayoutRespondentIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof UserLayoutIndexRoute
   '/profile': typeof UserLayoutProfileRoute
   '/dashboard': typeof DashboardDashboardLayoutRoute
-  '/respondent': typeof RespondentIndexRoute
   '/auth/login': typeof AuthLayoutAuthLoginRoute
   '/auth/signup': typeof AuthLayoutAuthSignupRoute
+  '/respondent': typeof RespondentLayoutRespondentIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authLayout': typeof AuthLayoutRouteWithChildren
+  '/_respondentLayout': typeof RespondentLayoutRouteWithChildren
   '/_userLayout': typeof UserLayoutRouteWithChildren
   '/_userLayout/profile': typeof UserLayoutProfileRoute
   '/dashboard/_dashboardLayout': typeof DashboardDashboardLayoutRoute
   '/_userLayout/': typeof UserLayoutIndexRoute
-  '/respondent/': typeof RespondentIndexRoute
   '/_authLayout/auth/login': typeof AuthLayoutAuthLoginRoute
   '/_authLayout/auth/signup': typeof AuthLayoutAuthSignupRoute
+  '/_respondentLayout/respondent/': typeof RespondentLayoutRespondentIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,34 +98,35 @@ export interface FileRouteTypes {
     | '/'
     | '/profile'
     | '/dashboard'
-    | '/respondent/'
     | '/auth/login'
     | '/auth/signup'
+    | '/respondent/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/profile'
     | '/dashboard'
-    | '/respondent'
     | '/auth/login'
     | '/auth/signup'
+    | '/respondent'
   id:
     | '__root__'
     | '/_authLayout'
+    | '/_respondentLayout'
     | '/_userLayout'
     | '/_userLayout/profile'
     | '/dashboard/_dashboardLayout'
     | '/_userLayout/'
-    | '/respondent/'
     | '/_authLayout/auth/login'
     | '/_authLayout/auth/signup'
+    | '/_respondentLayout/respondent/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthLayoutRoute: typeof AuthLayoutRouteWithChildren
+  RespondentLayoutRoute: typeof RespondentLayoutRouteWithChildren
   UserLayoutRoute: typeof UserLayoutRouteWithChildren
   DashboardDashboardLayoutRoute: typeof DashboardDashboardLayoutRoute
-  RespondentIndexRoute: typeof RespondentIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -130,18 +138,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_respondentLayout': {
+      id: '/_respondentLayout'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof RespondentLayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authLayout': {
       id: '/_authLayout'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthLayoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/respondent/': {
-      id: '/respondent/'
-      path: '/respondent'
-      fullPath: '/respondent/'
-      preLoaderRoute: typeof RespondentIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_userLayout/': {
@@ -164,6 +172,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/profile'
       preLoaderRoute: typeof UserLayoutProfileRouteImport
       parentRoute: typeof UserLayoutRoute
+    }
+    '/_respondentLayout/respondent/': {
+      id: '/_respondentLayout/respondent/'
+      path: '/respondent'
+      fullPath: '/respondent/'
+      preLoaderRoute: typeof RespondentLayoutRespondentIndexRouteImport
+      parentRoute: typeof RespondentLayoutRoute
     }
     '/_authLayout/auth/signup': {
       id: '/_authLayout/auth/signup'
@@ -196,6 +211,17 @@ const AuthLayoutRouteWithChildren = AuthLayoutRoute._addFileChildren(
   AuthLayoutRouteChildren,
 )
 
+interface RespondentLayoutRouteChildren {
+  RespondentLayoutRespondentIndexRoute: typeof RespondentLayoutRespondentIndexRoute
+}
+
+const RespondentLayoutRouteChildren: RespondentLayoutRouteChildren = {
+  RespondentLayoutRespondentIndexRoute: RespondentLayoutRespondentIndexRoute,
+}
+
+const RespondentLayoutRouteWithChildren =
+  RespondentLayoutRoute._addFileChildren(RespondentLayoutRouteChildren)
+
 interface UserLayoutRouteChildren {
   UserLayoutProfileRoute: typeof UserLayoutProfileRoute
   UserLayoutIndexRoute: typeof UserLayoutIndexRoute
@@ -212,9 +238,9 @@ const UserLayoutRouteWithChildren = UserLayoutRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthLayoutRoute: AuthLayoutRouteWithChildren,
+  RespondentLayoutRoute: RespondentLayoutRouteWithChildren,
   UserLayoutRoute: UserLayoutRouteWithChildren,
   DashboardDashboardLayoutRoute: DashboardDashboardLayoutRoute,
-  RespondentIndexRoute: RespondentIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
