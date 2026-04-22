@@ -47,7 +47,7 @@ export class LocationService {
 
       if (res.length > 0) {
         return {
-          responders: res,
+          responderIDs: ['175fc326-170d-49c1-a58d-14643576de29', ...res],
         };
       }
 
@@ -55,7 +55,7 @@ export class LocationService {
     }
 
     return {
-      responders: [],
+      responderIDs: [],
     };
   }
 

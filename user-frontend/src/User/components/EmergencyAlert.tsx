@@ -2,9 +2,15 @@ import React, { useState } from "react";
 import { useFetchClient } from "../../utilities/useFetchClient";
 import { useMutation } from "@tanstack/react-query";
 import z from "zod";
+import { useAuth } from "../../contexts/AuthContext";
 
 const alertType = z.enum(["Medic", "FireFighter", "Police"]);
 const alertSchema = z.object({
+  user: z.object({
+    firstName: z.string(),
+    lastName: z.string(),
+    phone: z.string("Phone number should 10 digits long").length(10),
+  }),
   alertType: alertType,
   latitude: z
     .number({ error: "Latitude must be a number" })
@@ -22,9 +28,11 @@ type AlertType = z.infer<typeof alertType>;
 const EmergencyAlert: React.FC = () => {
   const { protectedFetch } = useFetchClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user } = useAuth();
 
   const sendAlerts = async (alertType: AlertType) => {
     const data = {
+      user: user,
       latitude: 27.5878,
       longitude: 85.3213,
       alertType: alertType,
@@ -57,8 +65,6 @@ const EmergencyAlert: React.FC = () => {
     onError: (err) => {
       console.error(err.message);
     },
-    //  async (alertData: SendAlertData) => {
-    //
   });
   return (
     <>

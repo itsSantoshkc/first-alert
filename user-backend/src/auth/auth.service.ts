@@ -172,6 +172,7 @@ export class AuthService {
         firstName: existing.firstname,
         lastName: existing.lastname,
         email: existing.email,
+        phone: existing.phone,
         role: existing.role,
       },
 
@@ -244,6 +245,7 @@ export class AuthService {
         firstName: newUser.firstname,
         lastName: newUser.lastname,
         email: newUser.email,
+        phone: newUser.phone,
         role: newUser.role,
       },
 

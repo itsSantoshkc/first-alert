@@ -1,14 +1,17 @@
 import { useEffect } from "react";
 import Map from "../components/Map";
 import { socket } from "../lib/socket";
+import { useAuth } from "../contexts/AuthContext";
 
 const Homepage = () => {
+  const { user } = useAuth();
+  const { role } = user!;
   useEffect(() => {
     socket.connect(); // <-- missing
 
     socket.on("connect", () => console.log("connected:", socket.id));
     socket.on("disconnect", () => console.log("disconnected"));
-    socket.on("newAlert", (data) => console.log("alert:", data));
+    socket.on(`alert:${role}`, (data) => console.log("alert:", data));
 
     return () => {
       socket.off("connect");

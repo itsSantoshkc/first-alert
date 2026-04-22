@@ -27,15 +27,28 @@ export class AlertService {
         latitude: sendAlertDto.latitude,
       },
     });
+    const newAlert = await this.prisma.alerts.create({
+      data: {
+        userId: userID,
+        latitude: sendAlertDto.latitude,
+        longitude: sendAlertDto.longitude,
+      },
+    });
 
-    setTimeout(() => {
-      this.alertGateway.server.to('getAlerts').emit('Hello');
-      this.alertGateway.sendAlertToUser(
-        '175fc326-170d-49c1-a58d-14643576de29',
-        'Hello',
-      );
-      console.log('Message sent tot the socket');
-    }, 1000);
+    // Send to all the respondent with userId
+    if (data) {
+      if (newAlert) {
+        data.responderIDs.forEach((responderID) => {
+          this.alertGateway.sendAlertToRespondentFromUser(
+            responderID,
+            sendAlertDto.alertType,
+            sendAlertDto.user,
+            newAlert.id,
+          );
+        });
+      }
+    }
+    return newAlert.id;
   }
 
   async sendAlertToRespondent(alertId, data: SendAlertDto) {}

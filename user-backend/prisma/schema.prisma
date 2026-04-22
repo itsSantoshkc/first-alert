@@ -57,8 +57,8 @@ model Alerts {
   id            String @id @default(uuid())
   userId        String
   user          User   @relation("UserAlerts", fields: [userId], references: [userId])
-  respondentId  String
-  respondent    User   @relation("RespondentAlerts", fields: [respondentId], references: [userId])
+  respondentId  String?
+  respondent    User?   @relation("RespondentAlerts", fields: [respondentId], references: [userId])
   latitude      Float
   longitude     Float
 }
