@@ -7,7 +7,7 @@ import {
   OnGatewayConnection,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AlertUserDto } from './dto/send-alert-dto';
+import { AlertUserDto, SendAlertDto } from './dto/send-alert-dto';
 
 @WebSocketGateway({
   cors: {
@@ -37,15 +37,21 @@ export class AlertGateway implements OnGatewayConnection {
   // Call this from any service to push alert to specific user
   sendAlertToRespondentFromUser(
     userId: string,
-    alert: any,
-    alertBY: AlertUserDto,
+    alertDetails: SendAlertDto,
     socketId: string,
   ) {
     const formattedData = {
-      alertType: alert,
+      alertType: alertDetails.alertType,
+      alertFrom: alertDetails.user,
+      location: {
+        latitude: alertDetails.latitude,
+        longitude: alertDetails.longitude,
+      },
+      socketId: socketId,
     };
-    console.log(`Emitting to user:${userId}`, alert);
-    this.server.to(`${userId}`).emit(`alert:${alert}`, alert);
+    this.server
+      .to(`${userId}`)
+      .emit(`alert:${formattedData.alertType}`, formattedData);
   }
 
   @SubscribeMessage('sendAlerts')

@@ -41,8 +41,7 @@ export class AlertService {
         data.responderIDs.forEach((responderID) => {
           this.alertGateway.sendAlertToRespondentFromUser(
             responderID,
-            sendAlertDto.alertType,
-            sendAlertDto.user,
+            sendAlertDto,
             newAlert.id,
           );
         });
