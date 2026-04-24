@@ -7,7 +7,10 @@ import {
   OnGatewayConnection,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
 import { AlertUserDto, SendAlertDto } from './dto/send-alert-dto';
+import { Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @WebSocketGateway({
   cors: {
@@ -19,22 +22,26 @@ export class AlertGateway implements OnGatewayConnection {
   @WebSocketServer()
   server!: Server;
 
+  constructor(private jwtService: JwtService) {}
+
   handleConnection(client: Socket) {
     try {
       const token =
         client.handshake.auth?.token ||
         client.handshake.headers?.authorization?.split(' ')[1];
 
-      const userId = '175fc326-170d-49c1-a58d-14643576de29';
+      if (!token) throw new Error('No token');
 
-      client.join(`${userId}`);
-      console.log('All rooms:', client.rooms);
-    } catch {
+      const payload = this.jwtService.decode(token);
+      client.data.user = payload;
+
+      client.join(`user:${payload.sub}`);
+    } catch (err) {
+      console.log(err);
       client.disconnect();
     }
   }
 
-  // Call this from any service to push alert to specific user
   sendAlertToRespondentFromUser(
     userId: string,
     alertDetails: SendAlertDto,
@@ -50,13 +57,61 @@ export class AlertGateway implements OnGatewayConnection {
       socketId: socketId,
     };
     this.server
-      .to(`${userId}`)
+      .to(`user:${userId}`)
       .emit(`alert:${formattedData.alertType}`, formattedData);
   }
 
-  @SubscribeMessage('sendAlerts')
-  handleGetAlerts(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
-    console.log('Alert received:', data);
-    return { status: 'ok' };
+  // respondent joins alert room after accepting
+  @SubscribeMessage('join:alert')
+  handleJoinAlert(
+    @MessageBody() data: { alertId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.join(`alert:${data.alertId}`);
+    console.log(`Client joined alert:${data.alertId}`);
+    this.server.to(`alert:${data.alertId}`).emit(`alert:${data.alertId}`, {
+      status: 'joined',
+    });
+  }
+
+  // broadcast to alert room
+  sendToAlertRoom(alertId: string, data: any) {
+    this.server.to(`alert:${alertId}`).emit(`alert:${alertId}`, data);
+  }
+
+  @SubscribeMessage('alert:accept')
+  handleAccept(
+    @MessageBody()
+    data: {
+      alertId: string;
+      userId: string;
+      latitude: number;
+      longitude: number;
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.join(`alert:${data.alertId}`);
+    this.server.to(`alert:${data.alertId}`).emit(`alert:${data.alertId}`, {
+      status: 'accepted',
+      respondent: data.userId,
+      location: { latitude: data.latitude, longitude: data.longitude },
+    });
+  }
+
+  @SubscribeMessage('alert:reject')
+  handleReject(@MessageBody() data: { alertId: string; userId: string }) {
+    console.log(`Alert ${data.alertId} rejected by ${data.userId}`);
+  }
+
+  @SubscribeMessage('location:update')
+  handleLocationUpdate(
+    @MessageBody()
+    data: {
+      userId: string;
+      latitude: number;
+      longitude: number;
+    },
+  ) {
+    console.log('Location update:', data);
   }
 }

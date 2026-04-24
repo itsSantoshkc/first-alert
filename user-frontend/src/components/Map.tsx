@@ -5,7 +5,10 @@ import iconShadowUrl from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-type Props = {};
+type Props = {
+  position: [number, number];
+  setPosition: (coords: [number, number]) => void;
+};
 
 const kathmanduLocations: {
   type: string;
@@ -81,10 +84,7 @@ const MapRecenter = ({ position }: { position: [number, number] }) => {
   return null;
 };
 
-const Map = (props: Props) => {
-  const [position, setPosition] = useState<[number, number]>([
-    27.5878, 85.3213,
-  ]);
+const Map = ({ position, setPosition }: Props) => {
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
@@ -113,7 +113,6 @@ const Map = (props: Props) => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <MapRecenter position={position} />
-
       {kathmanduLocations?.map((obj) => (
         <Marker position={obj.coordinate} icon={imageObj[obj.type]}>
           <Popup>
@@ -124,11 +123,7 @@ const Map = (props: Props) => {
           </Popup>
         </Marker>
       ))}
-      {/* <RoutingMachine
-        start={kathmanduLocations[0].coordinate}
-        end={kathmanduLocations[10].coordinate}
-      /> */}
-
+      1
       <Marker position={position}>
         <Popup>
           <div className="text-center">

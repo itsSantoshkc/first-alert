@@ -1,9 +1,18 @@
-import { Body, Controller, Post, Req, Sse, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Patch,
+  Post,
+  Req,
+  Sse,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { SendAlertDto } from './dto/send-alert-dto';
 import { AlertService } from './alert.service';
+import { AcceptAlertDto } from './dto/accept-alert-dto';
 
 const alertSubject = new Subject<any>();
 
@@ -20,14 +29,20 @@ export class AlertController {
     if (!userId) {
       throw new Error('User ID is empty');
     }
-    this.alertService.sendAlert(userId, body);
-    return { sent: true };
+    return this.alertService.sendAlert(userId, body);
   }
 
-  @Sse('stream-alerts')
-  stream(): Observable<MessageEvent> {
-    return alertSubject
-      .asObservable()
-      .pipe(map((data) => ({ data }) as MessageEvent));
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('accept-alert')
+  acceptAlert(
+    @Req() req: Request & { user?: { userId?: string } },
+    @Body() body: AcceptAlertDto,
+  ) {
+    const responderID = req.user?.userId;
+    if (!responderID) {
+      throw new Error('User ID is empty');
+    }
+    this.alertService.acceptAlert(responderID, body);
+    return { sent: true };
   }
 }

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { useFetchClient } from "../../utilities/useFetchClient";
 import { useMutation } from "@tanstack/react-query";
 import z from "zod";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFetchClient } from "@/utilities/useFetchClient";
 
 const alertType = z.enum(["Medic", "FireFighter", "Police"]);
 const alertSchema = z.object({
@@ -24,8 +24,11 @@ const alertSchema = z.object({
 
 type SendAlertData = z.infer<typeof alertSchema>;
 type AlertType = z.infer<typeof alertType>;
+type EmergencyAlertProps = {
+  setAlertId: (alertId: string) => void;
+};
 
-const EmergencyAlert: React.FC = () => {
+const EmergencyAlert = ({ setAlertId }: EmergencyAlertProps) => {
   const { protectedFetch } = useFetchClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuth();
@@ -60,7 +63,7 @@ const EmergencyAlert: React.FC = () => {
   const { mutate } = useMutation({
     mutationFn: sendAlertToServer,
     onSuccess: (data) => {
-      console.log(data);
+      setAlertId(data.alertId);
     },
     onError: (err) => {
       console.error(err.message);

@@ -1,3 +1,4 @@
+import { AcceptAlertDto } from './dto/accept-alert-dto';
 import { AlertGateway } from './alert.gateway';
 import { Injectable } from '@nestjs/common';
 import { SendAlertDto } from './dto/send-alert-dto';
@@ -47,8 +48,11 @@ export class AlertService {
         });
       }
     }
-    return newAlert.id;
+    return { alertId: newAlert.id };
   }
 
+  async acceptAlert(userID: string, acceptAlertDto: AcceptAlertDto) {
+    console.log(userID, acceptAlertDto);
+  }
   async sendAlertToRespondent(alertId, data: SendAlertDto) {}
 }
