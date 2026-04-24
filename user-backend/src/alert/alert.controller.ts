@@ -42,7 +42,10 @@ export class AlertController {
     if (!responderID) {
       throw new Error('User ID is empty');
     }
-    this.alertService.acceptAlert(responderID, body);
-    return { sent: true };
+
+    if (!body) {
+      throw new Error('Body is empty');
+    }
+    return this.alertService.acceptAlert(responderID, body);
   }
 }

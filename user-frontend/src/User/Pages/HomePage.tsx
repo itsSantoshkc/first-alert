@@ -7,35 +7,41 @@ const Homepage = () => {
   const [position, setPosition] = useState<[number, number]>([
     27.5878, 85.3213,
   ]);
-
+  const [respondendPosition, setRespondendPosition] = useState<
+    [number, number] | null
+  >(null);
   const [alertId, setAlertId] = useState<string | null>(null);
+  const [isAvailable, setIsAvailable] = useState<boolean>(true);
 
-  const [isAvailable, setIsAvailable] = useState<boolean>(false);
   useEffect(() => {
     socket.connect();
 
-    socket.on("connect", () => console.log("connected:", socket.id));
-    socket.on("disconnect", () => console.log("disconnected"));
-    console.log(alertId);
-    if (isAvailable) {
-      setIsAvailable(false);
-      socket.on(`activeAlert:${alertId}`, (data) => {
-        console.log(data);
-      }); // );
-    }
+    socket.on("connect", () => {
+      socket.emit("join:activeAlert", { alertId }); // join room after connect
+    });
+
+    socket.on("location:update", (data) => {
+      if (data) {
+        setRespondendPosition([data.latitude, data.longitude]);
+      }
+    });
 
     return () => {
       socket.off("connect");
-      socket.off("disconnect");
+      socket.off("location:update");
       socket.disconnect();
     };
   }, [alertId]);
   return (
     <>
       <div className="absolute inset-0 z-0">
-        <Map position={position} setPosition={setPosition} />
+        <Map
+          position={position}
+          setPosition={setPosition}
+          respondendPosition={respondendPosition}
+        />
       </div>
-      <EmergencyAlert setAlertId={setAlertId} />
+      <EmergencyAlert setAlertId={setAlertId} setIsAvailable={setIsAvailable} />
     </>
   );
 };

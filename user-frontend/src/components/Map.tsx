@@ -4,10 +4,12 @@ import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadowUrl from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import RoutingMachine from "@/utilities/RoutingMachine";
 
 type Props = {
   position: [number, number];
   setPosition: (coords: [number, number]) => void;
+  respondendPosition?: [number, number] | null;
 };
 
 const kathmanduLocations: {
@@ -84,7 +86,7 @@ const MapRecenter = ({ position }: { position: [number, number] }) => {
   return null;
 };
 
-const Map = ({ position, setPosition }: Props) => {
+const Map = ({ position, setPosition, respondendPosition }: Props) => {
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
@@ -123,7 +125,9 @@ const Map = ({ position, setPosition }: Props) => {
           </Popup>
         </Marker>
       ))}
-      1
+      {respondendPosition && (
+        <RoutingMachine start={position} end={respondendPosition} />
+      )}
       <Marker position={position}>
         <Popup>
           <div className="text-center">

@@ -79,28 +79,13 @@ export class AlertGateway implements OnGatewayConnection {
     this.server.to(`alert:${alertId}`).emit(`alert:${alertId}`, data);
   }
 
-  @SubscribeMessage('alert:accept')
-  handleAccept(
-    @MessageBody()
-    data: {
-      alertId: string;
-      userId: string;
-      latitude: number;
-      longitude: number;
-    },
+  @SubscribeMessage('join:activeAlert')
+  handleJoinActiveAlert(
+    @MessageBody() data: { alertId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    client.join(`alert:${data.alertId}`);
-    this.server.to(`alert:${data.alertId}`).emit(`alert:${data.alertId}`, {
-      status: 'accepted',
-      respondent: data.userId,
-      location: { latitude: data.latitude, longitude: data.longitude },
-    });
-  }
-
-  @SubscribeMessage('alert:reject')
-  handleReject(@MessageBody() data: { alertId: string; userId: string }) {
-    console.log(`Alert ${data.alertId} rejected by ${data.userId}`);
+    client.join(`activeAlert:${data.alertId}`);
+    console.log(`Joined room activeAlert:${data.alertId}`);
   }
 
   @SubscribeMessage('location:update')

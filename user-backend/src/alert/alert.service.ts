@@ -36,7 +36,6 @@ export class AlertService {
       },
     });
 
-    // Send to all the respondent with userId
     if (data) {
       if (newAlert) {
         data.responderIDs.forEach((responderID) => {
@@ -52,7 +51,23 @@ export class AlertService {
   }
 
   async acceptAlert(userID: string, acceptAlertDto: AcceptAlertDto) {
-    console.log(userID, acceptAlertDto);
+    const updateAlertData = await this.prisma.alerts.update({
+      data: {
+        respondentId: userID,
+      },
+      where: {
+        id: acceptAlertDto.socketId,
+      },
+    });
+    this.alertGateway.server
+      .to(`activeAlert:${acceptAlertDto.socketId}`)
+      .emit('location:update', {
+        longitude: acceptAlertDto.longitude,
+        latitude: acceptAlertDto.latitude,
+      });
+    return {
+      alertId: updateAlertData.id,
+    };
   }
   async sendAlertToRespondent(alertId, data: SendAlertDto) {}
 }

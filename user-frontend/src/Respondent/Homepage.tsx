@@ -5,6 +5,29 @@ import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { useFetchClient } from "@/utilities/useFetchClient";
 import { useMutation } from "@tanstack/react-query";
+import z from "zod";
+
+const alertType = z.enum(["Medic", "FireFighter", "Police"]);
+const acceptAlertSchema = z.object({
+  user: z.object({
+    firstName: z.string(),
+    lastName: z.string(),
+    phone: z.string("Phone number should 10 digits long").length(10),
+  }),
+  alertType: alertType,
+  socketId: z.string(),
+  latitude: z
+    .number({ error: "Latitude must be a number" })
+    .min(-90, "Latitude must be ≥ -90")
+    .max(90, "Latitude must be ≤ 90"),
+  longitude: z
+    .number({ error: "Longitude must be a number" })
+    .min(-180, "Longitude must be ≥ -180")
+    .max(180, "Longitude must be ≤ 180"),
+});
+
+type AcceptAlertData = z.infer<typeof acceptAlertSchema>;
+type AlertType = z.infer<typeof alertType>;
 
 const Homepage = () => {
   const { protectedFetch } = useFetchClient();
@@ -16,31 +39,33 @@ const Homepage = () => {
   const { user } = useAuth();
   const { role, userId } = user!;
 
-  const acceptAlert = async (alertId: string, data: any) => {
-    console.log(data);
-    socket.emit("alert:accept", {
-      alertId,
-      userId,
+  const acceptAlert = async (data: AcceptAlertData) => {
+    toast.dismiss();
+    const alertData = {
+      user: user,
       latitude: position[0],
       longitude: position[1],
-    });
+      alertType: data.alertType,
+      socketId: data.socketId,
+    };
 
-    // socket.emit("join:alert", { alertId });
+    const result = acceptAlertSchema.safeParse(alertData);
 
-    // socket.on(`alert:${alertId}`, (update) => {
-    //   console.log("Alert room update:", update);
-    // });
+    if (result.success) {
+      return mutate(result.data);
+    }
 
-    toast.dismiss();
+    return console.log(result.error);
   };
 
   const { mutate } = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: AcceptAlertData) => {
       setIsActivelyRespoding(true);
       const res = await protectedFetch(
         "http://localhost:3000/alert/accept-alert",
         {
           method: "PATCH",
+          body: JSON.stringify(data),
         },
       );
       if (!res.ok) {
@@ -72,7 +97,9 @@ const Homepage = () => {
   useEffect(() => {
     socket.connect();
 
-    socket.on("connect", () => console.log("connected:", socket.id));
+    socket.on("connect", () => {
+      socket.emit("join:activeAlert", { alertId: socket.id }); // join room after connect
+    });
     socket.on("disconnect", () => console.log("disconnected"));
     if (!isActivelyResponding) {
       socket.on(`alert:${role}`, (data) =>
@@ -98,7 +125,7 @@ const Homepage = () => {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => acceptAlert(data.alertId, data)}
+                onClick={() => acceptAlert(data)}
                 className="flex-1 rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
               >
                 Accept

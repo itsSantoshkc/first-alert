@@ -26,9 +26,13 @@ type SendAlertData = z.infer<typeof alertSchema>;
 type AlertType = z.infer<typeof alertType>;
 type EmergencyAlertProps = {
   setAlertId: (alertId: string) => void;
+  setIsAvailable: (isAvailable: boolean) => void;
 };
 
-const EmergencyAlert = ({ setAlertId }: EmergencyAlertProps) => {
+const EmergencyAlert = ({
+  setAlertId,
+  setIsAvailable,
+}: EmergencyAlertProps) => {
   const { protectedFetch } = useFetchClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuth();
@@ -63,9 +67,11 @@ const EmergencyAlert = ({ setAlertId }: EmergencyAlertProps) => {
   const { mutate } = useMutation({
     mutationFn: sendAlertToServer,
     onSuccess: (data) => {
+      setIsAvailable(false);
       setAlertId(data.alertId);
     },
     onError: (err) => {
+      setIsAvailable(true);
       console.error(err.message);
     },
   });

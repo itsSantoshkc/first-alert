@@ -22,16 +22,6 @@ export class AlertUserDto {
   phone!: string;
 }
 
-class LocationDto {
-  @IsNumber()
-  @IsDefined()
-  longitude!: number;
-
-  @IsNumber()
-  @IsDefined()
-  latitude!: number;
-}
-
 export class AcceptAlertDto {
   @ValidateNested()
   @Type(() => AlertUserDto)
@@ -42,10 +32,13 @@ export class AcceptAlertDto {
   @IsDefined()
   alertType!: Role;
 
-  @ValidateNested()
-  @Type(() => LocationDto)
+  @IsNumber()
   @IsDefined()
-  location!: LocationDto;
+  longitude!: number;
+
+  @IsNumber()
+  @IsDefined()
+  latitude!: number;
 
   @IsString()
   @IsDefined()
