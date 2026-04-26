@@ -1,9 +1,11 @@
 import { AcceptAlertDto } from './dto/accept-alert-dto';
 import { AlertGateway } from './alert.gateway';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { SendAlertDto } from './dto/send-alert-dto';
 import { PrismaService } from '../prisma.service';
 import { LocationService } from '../location/locaion.service';
+import { REDIS_CLIENT } from '../redis.module';
+import type { RedisClientType } from 'redis';
 
 @Injectable()
 export class AlertService {
@@ -11,6 +13,7 @@ export class AlertService {
     private prisma: PrismaService,
     private locationService: LocationService,
     private alertGateway: AlertGateway,
+    @Inject(REDIS_CLIENT) private readonly redis: RedisClientType,
   ) {}
   async sendAlert(userID: string, sendAlertDto: SendAlertDto) {
     if (!userID) {
@@ -45,6 +48,7 @@ export class AlertService {
             newAlert.id,
           );
         });
+        await this.redis.hSet('respondent:sockets', userID, newAlert.id);
       }
     }
     return { alertId: newAlert.id };
@@ -59,12 +63,20 @@ export class AlertService {
         id: acceptAlertDto.socketId,
       },
     });
+
+    await this.redis.hSet(
+      'respondent:sockets',
+      userID,
+      acceptAlertDto.socketId,
+    );
+
     this.alertGateway.server
       .to(`activeAlert:${acceptAlertDto.socketId}`)
       .emit('location:update', {
         longitude: acceptAlertDto.longitude,
         latitude: acceptAlertDto.latitude,
       });
+
     return {
       alertId: updateAlertData.id,
     };

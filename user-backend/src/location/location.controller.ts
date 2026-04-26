@@ -17,17 +17,6 @@ import { type Request } from 'express';
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
-  @Get()
-  getHello(): string {
-    return this.locationService.getHello();
-  }
-
-  @Post()
-  populate() {
-    console.log('Hello');
-    return this.locationService.populateData();
-  }
-
   @UseGuards(AuthGuard('jwt'))
   @Patch('live-location')
   updateRespondentsLiveLocation(

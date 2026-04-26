@@ -4,7 +4,7 @@ import { useFetchClient } from "../../utilities/useFetchClient";
 const ProfilePage = () => {
   const { protectedFetch } = useFetchClient();
 
-  const { data, isLoading, error } = useQuery({
+  const { isLoading, error } = useQuery({
     queryKey: ["userProfile"],
     queryFn: async () => {
       const res = await protectedFetch("http://localhost:3000/user");

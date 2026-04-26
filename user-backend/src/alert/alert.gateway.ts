@@ -8,9 +8,10 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
-import { AlertUserDto, SendAlertDto } from './dto/send-alert-dto';
-import { Req, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { SendAlertDto } from './dto/send-alert-dto';
+import { REDIS_CLIENT } from '../redis.module';
+import type { RedisClientType } from 'redis';
+import { Inject } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
@@ -22,7 +23,10 @@ export class AlertGateway implements OnGatewayConnection {
   @WebSocketServer()
   server!: Server;
 
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    @Inject(REDIS_CLIENT) private readonly redis: RedisClientType,
+  ) {}
 
   handleConnection(client: Socket) {
     try {
@@ -89,14 +93,20 @@ export class AlertGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('location:update')
-  handleLocationUpdate(
+  async handleLocationUpdate(
     @MessageBody()
     data: {
       userId: string;
-      latitude: number;
-      longitude: number;
+      position: [number, number];
     },
   ) {
-    console.log('Location update:', data);
+    const socketId = await this.redis.hGet('respondent:sockets', data.userId);
+
+    if (!socketId) return;
+    console.log(data);
+    this.server.to(`activeAlert:${socketId}`).emit('location:update', {
+      latitude: data.position[0],
+      longitude: data.position[1],
+    });
   }
 }

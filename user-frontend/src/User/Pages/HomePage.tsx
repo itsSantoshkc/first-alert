@@ -2,8 +2,12 @@ import Map from "@/components/Map";
 import { useEffect, useState } from "react";
 import EmergencyAlert from "../components/EmergencyAlert";
 import { socket } from "@/lib/socket";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Homepage = () => {
+  const { user } = useAuth();
+  const { role, userId } = user!;
+
   const [position, setPosition] = useState<[number, number]>([
     27.5878, 85.3213,
   ]);
@@ -12,6 +16,14 @@ const Homepage = () => {
   >(null);
   const [alertId, setAlertId] = useState<string | null>(null);
   const [isAvailable, setIsAvailable] = useState<boolean>(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      socket.emit("location:update", { userId, position });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isAvailable]);
 
   useEffect(() => {
     socket.connect();
