@@ -35,7 +35,6 @@ export class LocationController {
     @Req() req: Request,
   ) {
     const respondentId = req.user!['userId'];
-    console.log(respondentId);
     return this.locationService.updateRespondentsLiveLocation(
       respondentLiveLocationDto,
       respondentId,

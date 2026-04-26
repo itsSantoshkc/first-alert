@@ -1,31 +1,13 @@
-import { Type } from 'class-transformer';
-import {
-  IsAlphanumeric,
-  IsEmail,
-  IsEnum,
-  IsLatitude,
-  IsLongitude,
-  IsNotEmpty,
-  IsOptional,
-  IsPhoneNumber,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { IsLatitude, IsLongitude, IsNotEmpty, IsString } from 'class-validator';
 
-class RespondentLocationDto {
+export class RespondentLiveLocationDto {
+  @IsString()
+  @IsNotEmpty()
+  responderType!: string;
+
   @IsLongitude()
   longitude!: number;
 
   @IsLatitude()
   latitude!: number;
-}
-
-export class RespondentLiveLocationDto {
-  @IsString()
-  @IsNotEmpty()
-  responderType!: string; //Todo: Turn this into enum instead of a string
-
-  @ValidateNested()
-  @Type(() => RespondentLocationDto)
-  userLocation!: RespondentLocationDto;
 }

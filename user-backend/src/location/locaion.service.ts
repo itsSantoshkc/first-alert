@@ -16,13 +16,30 @@ export class LocationService {
     respondentLiveLocationDto: RespondentLiveLocationDto,
     respondentId: string,
   ) {
-    const redisResponderKey = `responders:${respondentLiveLocationDto.responderType.toLowerCase()}`;
-    // Update the data here
-    const res = await this.redis.geoAdd(redisResponderKey, {
-      longitude: respondentLiveLocationDto.userLocation.longitude,
-      latitude: respondentLiveLocationDto.userLocation.latitude,
-      member: respondentId,
-    });
+    try {
+      const { latitude, longitude, responderType } = respondentLiveLocationDto;
+
+      if (!latitude || !longitude || !responderType) {
+        console.error('Missing fields:', {
+          latitude,
+          longitude,
+          responderType,
+        });
+        return { updated: false };
+      }
+
+      const redisResponderKey = `responders:${responderType.toLowerCase()}`;
+
+      const res = await this.redis.geoAdd(redisResponderKey, {
+        longitude: Number(longitude),
+        latitude: Number(latitude),
+        member: String(respondentId),
+      });
+      return { updated: res > 0 };
+    } catch (error) {
+      console.error(error);
+      return { updated: false };
+    }
   }
 
   async getRespondersAroundUser(
