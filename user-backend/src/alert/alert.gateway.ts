@@ -60,6 +60,7 @@ export class AlertGateway implements OnGatewayConnection {
       },
       socketId: socketId,
     };
+    console.log('Alert Sent to the user', userId);
     this.server
       .to(`user:${userId}`)
       .emit(`alert:${formattedData.alertType}`, formattedData);

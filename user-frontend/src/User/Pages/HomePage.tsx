@@ -1,58 +1,73 @@
 import Map from "@/components/Map";
-import { useEffect, useState } from "react";
 import EmergencyAlert from "../components/EmergencyAlert";
 import { socket } from "@/lib/socket";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
 
 const Homepage = () => {
   const { user } = useAuth();
-  const { role, userId } = user!;
 
   const [position, setPosition] = useState<[number, number]>([
     27.5878, 85.3213,
   ]);
-  const [respondendPosition, setRespondendPosition] = useState<
+  const [responderPosition, setResponderPosition] = useState<
     [number, number] | null
   >(null);
-  const [alertId, setAlertId] = useState<string | null>(null);
-  const [isAvailable, setIsAvailable] = useState<boolean>(true);
 
+  const [alertId, setAlertId] = useState<string | null>(null);
+  const [isAvailable, setIsAvailable] = useState(true);
+
+  const userId = user?.userId;
+
+  // Emit location updates
   useEffect(() => {
+    if (!userId || !isAvailable) return;
+
     const interval = setInterval(() => {
       socket.emit("location:update", { userId, position });
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAvailable]);
+  }, [userId, position, isAvailable]);
 
   useEffect(() => {
+    if (!userId) return;
+
     socket.connect();
 
-    socket.on("connect", () => {
-      socket.emit("join:activeAlert", { alertId }); // join room after connect
-    });
-
-    socket.on("location:update", (data) => {
-      if (data) {
-        setRespondendPosition([data.latitude, data.longitude]);
+    const handleConnect = () => {
+      if (alertId) {
+        socket.emit("join:activeAlert", { alertId });
       }
-    });
+    };
+
+    const handleLocationUpdate = (data: any) => {
+      if (!data) return;
+      setResponderPosition([data.latitude, data.longitude]);
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("location:update", handleLocationUpdate);
 
     return () => {
-      socket.off("connect");
-      socket.off("location:update");
+      socket.off("connect", handleConnect);
+      socket.off("location:update", handleLocationUpdate);
       socket.disconnect();
     };
-  }, [alertId]);
+  }, [userId, alertId]);
+
+  if (!userId) return null;
+
   return (
     <>
       <div className="absolute inset-0 z-0">
         <Map
           position={position}
           setPosition={setPosition}
-          respondendPosition={respondendPosition}
+          respondendPosition={responderPosition}
         />
       </div>
+
       <EmergencyAlert setAlertId={setAlertId} setIsAvailable={setIsAvailable} />
     </>
   );
