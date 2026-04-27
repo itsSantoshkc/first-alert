@@ -1,4 +1,10 @@
-import { useEffect, useMemo } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useMemo,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -12,6 +18,10 @@ type Props = {
   position: [number, number];
   setPosition: (coords: [number, number]) => void;
   respondendPosition?: [number, number] | null;
+};
+
+export type MapRef = {
+  latestPosition: [number, number] | null;
 };
 
 const DEFAULT_ICON = L.icon({
@@ -33,71 +43,91 @@ const MapRecenter = ({ position }: { position: [number, number] }) => {
   return null;
 };
 
-const Map = ({ position, setPosition, respondendPosition }: Props) => {
-  const icons = useMemo(() => {
-    return {
-      FireFighter: L.icon({
-        iconUrl: "/fire-truck.svg",
-        iconSize: [35, 35],
-        iconAnchor: [17, 35],
-      }),
-      Police: L.icon({
-        iconUrl: "/police.svg",
-        iconSize: [35, 35],
-        iconAnchor: [17, 35],
-      }),
-      Medic: L.icon({
-        iconUrl: "/ambulance.svg",
-        iconSize: [35, 35],
-        iconAnchor: [17, 35],
-      }),
-    } satisfies Record<"Police" | "Medic" | "FireFighter", L.Icon>;
-  }, []);
+const Map = forwardRef<MapRef, Props>(
+  ({ position, setPosition, respondendPosition }, ref) => {
+    const latestPositionRef = useRef<[number, number] | null>(position);
 
-  useEffect(() => {
-    if (!("geolocation" in navigator)) return;
+    useImperativeHandle(ref, () => ({
+      latestPosition: latestPositionRef.current,
+    }));
 
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        setPosition([pos.coords.latitude, pos.coords.longitude]);
-      },
-      (err) => {
-        console.warn("Location access denied or unavailable.", err);
-      },
-      { enableHighAccuracy: true },
+    const icons = useMemo(() => {
+      return {
+        FireFighter: L.icon({
+          iconUrl: "/fire-truck.svg",
+          iconSize: [35, 35],
+          iconAnchor: [17, 35],
+        }),
+        Police: L.icon({
+          iconUrl: "/police.svg",
+          iconSize: [35, 35],
+          iconAnchor: [17, 35],
+        }),
+        Medic: L.icon({
+          iconUrl: "/ambulance.svg",
+          iconSize: [35, 35],
+          iconAnchor: [17, 35],
+        }),
+      } satisfies Record<"Police" | "Medic" | "FireFighter", L.Icon>;
+    }, []);
+
+    useEffect(() => {
+      if (!("geolocation" in navigator)) return;
+
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const coords: [number, number] = [
+            pos.coords.latitude,
+            pos.coords.longitude,
+          ];
+
+          // updates instantly (no delay)
+          latestPositionRef.current = coords;
+
+          // updates react state (async)
+          setPosition(coords);
+        },
+        (err) => {
+          console.warn("Location access denied or unavailable.", err);
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+        },
+      );
+
+      return () => navigator.geolocation.clearWatch(watchId);
+    }, [setPosition]);
+
+    return (
+      <MapContainer
+        center={position}
+        zoom={14}
+        zoomControl={false}
+        style={{ height: "100%", width: "100%", zIndex: 0 }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        <MapRecenter position={position} />
+
+        <Marker position={position}>
+          <Popup>
+            <div className="text-center">
+              <p className="font-bold">Current Location</p>
+              <p className="text-xs text-gray-500">Device Location</p>
+            </div>
+          </Popup>
+        </Marker>
+
+        {respondendPosition && (
+          <RoutingMachine start={position} end={respondendPosition} />
+        )}
+      </MapContainer>
     );
-
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [setPosition]);
-
-  return (
-    <MapContainer
-      center={position}
-      zoom={14}
-      zoomControl={false}
-      style={{ height: "100%", width: "100%", zIndex: 0 }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-
-      <MapRecenter position={position} />
-
-      <Marker position={position}>
-        <Popup>
-          <div className="text-center">
-            <p className="font-bold">Current Location</p>
-            <p className="text-xs text-gray-500">Device Location</p>
-          </div>
-        </Popup>
-      </Marker>
-
-      {respondendPosition && (
-        <RoutingMachine start={position} end={respondendPosition} />
-      )}
-    </MapContainer>
-  );
-};
+  },
+);
 
 export default Map;

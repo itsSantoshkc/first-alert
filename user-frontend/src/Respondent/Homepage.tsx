@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import Map from "../components/Map";
+import { useEffect, useRef, useState } from "react";
+import Map, { type MapRef } from "../components/Map";
 import { socket } from "../lib/socket";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
@@ -23,7 +23,7 @@ const acceptAlertSchema = z.object({
 
 type AcceptAlertData = z.infer<typeof acceptAlertSchema>;
 
-const DEFAULT_POSITION: [number, number] = [27.5878, 85.3213];
+const DEFAULT_POSITION: [number, number] = [27.6748, 85.4274];
 
 const Homepage = () => {
   const { protectedFetch } = useFetchClient();
@@ -31,6 +31,8 @@ const Homepage = () => {
 
   const userId = user?.userId;
   const role = user?.role;
+
+  const positonRef = useRef<MapRef>(null);
 
   const [position, setPosition] = useState<[number, number]>(DEFAULT_POSITION);
   const [userPosition, setUserPosition] = useState<[number, number] | null>(
@@ -41,7 +43,7 @@ const Homepage = () => {
   const { mutate: acceptAlertMutate } = useMutation({
     mutationFn: async (data: AcceptAlertData) => {
       setIsActivelyResponding(true);
-
+      console.log(data);
       const res = await protectedFetch(
         "http://localhost:3000/alert/accept-alert",
         {
@@ -87,12 +89,16 @@ const Homepage = () => {
   const acceptAlert = (data: any) => {
     if (!user) return;
 
-    toast.dismiss();
+    const latestPosition = positonRef?.current?.latestPosition;
 
+    if (!latestPosition) {
+      return;
+    }
+    toast.dismiss();
     const alertData = {
       user,
-      latitude: position[0],
-      longitude: position[1],
+      latitude: latestPosition[0],
+      longitude: latestPosition[1],
       alertType: data.alertType,
       socketId: data.socketId,
     };
@@ -209,10 +215,10 @@ const Homepage = () => {
 
   // Send live location every 5 seconds ONLY if responding
   // useEffect(() => {
-  //   if (!userId || !role || !isActivelyResponding) return;
+  //   if (!userId || !role) return;
 
   //   const interval = setInterval(() => {
-  //     socket.emit("location:update", { userId, position });
+  //     // socket.emit("location:update", { userId, position });
 
   //     updateLocation({
   //       latitude: position[0],
@@ -231,6 +237,7 @@ const Homepage = () => {
         position={position}
         setPosition={setPosition}
         respondendPosition={userPosition}
+        ref={positonRef}
       />
     </div>
   );
