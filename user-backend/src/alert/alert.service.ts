@@ -41,7 +41,6 @@ export class AlertService {
 
     if (data) {
       if (newAlert) {
-        console.log(data.responderIDs);
         data.responderIDs.forEach((responderID) => {
           this.alertGateway.sendAlertToRespondentFromUser(
             responderID,

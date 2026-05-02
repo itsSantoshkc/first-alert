@@ -73,7 +73,6 @@ export class AlertGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
   ) {
     client.join(`alert:${data.alertId}`);
-    console.log(`Client joined alert:${data.alertId}`);
     this.server.to(`alert:${data.alertId}`).emit(`alert:${data.alertId}`, {
       status: 'joined',
     });
@@ -90,7 +89,6 @@ export class AlertGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
   ) {
     client.join(`activeAlert:${data.alertId}`);
-    console.log(`Joined room activeAlert:${data.alertId}`);
   }
 
   @SubscribeMessage('location:update')
@@ -98,7 +96,9 @@ export class AlertGateway implements OnGatewayConnection {
     @MessageBody()
     data: {
       userId: string;
-      position: [number, number];
+      latitude: number;
+      longitude: number;
+      responderType: string;
     },
   ) {
     const socketId = await this.redis.hGet('respondent:sockets', data.userId);
@@ -106,8 +106,8 @@ export class AlertGateway implements OnGatewayConnection {
     if (!socketId) return;
     console.log(data);
     this.server.to(`activeAlert:${socketId}`).emit('location:update', {
-      latitude: data.position[0],
-      longitude: data.position[1],
+      latitude: data.latitude,
+      longitude: data.longitude,
     });
   }
 }
