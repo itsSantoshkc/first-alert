@@ -7,12 +7,15 @@ A real-time emergency response application that connects citizens in distress wi
 ## Screenshots
 
 ### User Sending Alert
+
 ![User Sending Alert](docs/images/user_sending_alert.jpeg)
 
 ### Alert Request to Respondent
-![Alert Request to Respondent](docs/images/user_sending_alert.jpeg)
+
+![Alert Request to Respondent](docs/images/alert_req_to_respondent.jpeg)
 
 ### Routing on Both User and Respondent
+
 ![Routing on Both User and Respondent](docs/images/routing_on_both_user_and_respondent.jpeg)
 
 ---
@@ -20,6 +23,7 @@ A real-time emergency response application that connects citizens in distress wi
 ## Tech Stack
 
 ### Frontend
+
 - **React** + **Vite** (TypeScript)
 - **React Leaflet** + **Leaflet Routing Machine** — interactive map with live routing
 - **Socket.IO Client** — real-time alert and location updates
@@ -28,6 +32,7 @@ A real-time emergency response application that connects citizens in distress wi
 - **Sonner** — toast notifications
 
 ### Backend
+
 - **NestJS** — modular backend framework
 - **Prisma** — ORM for database access
 - **Redis** — geospatial search for finding nearby responders
@@ -38,13 +43,12 @@ A real-time emergency response application that connects citizens in distress wi
 
 ## Features
 
-
-*   **Emergency Alert System** – Enables citizens to request immediate assistance from medical, police, or fire departments through a centralized interface.
-*   **Real-Time Dispatch Integration** – Leverages Socket.IO for instantaneous, low-latency alert broadcasting to all available responders.
-*   **Interactive Response Management** – Provides responders with actionable toast notifications to efficiently accept or decline incoming emergency requests.
-*   **Automated Live Routing** – Dynamically renders optimal navigational routes on an interactive map from the responder’s current location to the incident site.
-*   **Geospatial Tracking** – Implements a continuous 7-second polling interval to emit responder coordinates to the server during active missions.
-*   **Secure JWT Authentication** – Ensures robust session security using an access token and `httpOnly` refresh token cookie workflow.
+- **Emergency Alert System** – Enables citizens to request immediate assistance from medical, police, or fire departments through a centralized interface.
+- **Real-Time Dispatch Integration** – Leverages Socket.IO for instantaneous, low-latency alert broadcasting to all available responders.
+- **Interactive Response Management** – Provides responders with actionable toast notifications to efficiently accept or decline incoming emergency requests.
+- **Automated Live Routing** – Dynamically renders optimal navigational routes on an interactive map from the responder’s current location to the incident site.
+- **Geospatial Tracking** – Implements a continuous 7-second polling interval to emit responder coordinates to the server during active missions.
+- **Secure JWT Authentication** – Ensures robust session security using an access token and `httpOnly` refresh token cookie workflow.
 
 ---
 
@@ -55,13 +59,13 @@ A real-time emergency response application that connects citizens in distress wi
 │   ├── src/
 │   │   ├── assets/
 │   │   ├── Auth/                         # Contains Login,Register page
-│   │   ├── components/   
+│   │   ├── components/
 │   │   │   ├── Map.tsx                   # Leaflet map wrapper
 │   │   │   ├── ui/                       # ShadCn componentes
 │   │   │   └── RoutingMachine.tsx        # Leaflet routing with custom icons
-│   │   ├── contexts/   
+│   │   ├── contexts/
 │   │   │   └── AuthContext.tsx           # Auth state (user, tokens)
-│   │   ├── lib/    
+│   │   ├── lib/
 │   │   │   └── socket.ts                 # Socket.IO client instance
 │   │   │   └── utils.ts                  # Tailwind Merge
 │   │   ├── Respondent/
@@ -70,12 +74,12 @@ A real-time emergency response application that connects citizens in distress wi
 │   │   │   │   └── useAlertSocket.tsx    # Compnentes used for respondent
 │   │   │   │   └── useLocationSync.tsx   # Compnentes used for respondent
 │   │   │   └── Homepage.tsx              # Socket.IO client instance
-│   │   ├── User/   
+│   │   ├── User/
 │   │   │   └── components/               # Compnentes used for user
-│   │   │   └── Pages/                    
-│   │   │   └── Homepage.tsx              
+│   │   │   └── Pages/
+│   │   │   └── Homepage.tsx
 │   │   ├── routes/                       # Tanstack router generated
-│   │   ├── utilities/    
+│   │   ├── utilities/
 │   │   │   └── useFetchClient.ts         # Fetch wrapper with auth headers
 │   │   │   └── RoutingMachine.tsx        # For routing purposes
 │   │   │   └── jwtHelper.ts              # To decode jwt token
@@ -96,11 +100,13 @@ A real-time emergency response application that connects citizens in distress wi
 ## Environment Variables
 
 ### Frontend (`.env`)
+
 ```env
 VITE_SERVER_ADDRESS=http://localhost:3000
 ```
 
 ### Backend (`.env`)
+
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/firstalert
 REDIS_URL=redis://localhost:6379
@@ -112,11 +118,11 @@ REDIS_URL=redis://localhost:6379
 
 ### Auth — `/auth`
 
-| Method | Endpoint        | Auth | Description                          |
-|--------|-----------------|------|--------------------------------------|
-| POST   | `/auth/signup`  | No   | Register a new user                  |
-| POST   | `/auth/login`   | No   | Login, returns access + refresh token|
-| POST   | `/auth/refresh` | No   | Refresh access token via cookie      |
+| Method | Endpoint        | Auth | Description                           |
+| ------ | --------------- | ---- | ------------------------------------- |
+| POST   | `/auth/signup`  | No   | Register a new user                   |
+| POST   | `/auth/login`   | No   | Login, returns access + refresh token |
+| POST   | `/auth/refresh` | No   | Refresh access token via cookie       |
 
 **Tokens:** Access token returned in response body. Refresh token set as an `httpOnly` cookie (`maxAge: 7 days`).
 
@@ -124,12 +130,13 @@ REDIS_URL=redis://localhost:6379
 
 ### Alert — `/alert`
 
-| Method | Endpoint             | Auth | Description                          |
-|--------|----------------------|------|--------------------------------------|
-| POST   | `/alert/send-alert`  | JWT  | Citizen sends an emergency alert     |
-| PATCH  | `/alert/accept-alert`| JWT  | Responder accepts an incoming alert  |
+| Method | Endpoint              | Auth | Description                         |
+| ------ | --------------------- | ---- | ----------------------------------- |
+| POST   | `/alert/send-alert`   | JWT  | Citizen sends an emergency alert    |
+| PATCH  | `/alert/accept-alert` | JWT  | Responder accepts an incoming alert |
 
 **`POST /alert/send-alert` body:**
+
 ```json
 {
   "alertType": "Medic | FireFighter | Police",
@@ -139,6 +146,7 @@ REDIS_URL=redis://localhost:6379
 ```
 
 **`PATCH /alert/accept-alert` body:**
+
 ```json
 {
   "user": {
@@ -157,12 +165,13 @@ REDIS_URL=redis://localhost:6379
 
 ### Location — `/location`
 
-| Method | Endpoint                        | Auth | Description                              |
-|--------|---------------------------------|------|------------------------------------------|
-| PATCH  | `/location/live-location`       | JWT  | Update responder's live location         |
-| POST   | `/location/get-respondent-location` | No | Find responders near a given coordinate |
+| Method | Endpoint                            | Auth | Description                             |
+| ------ | ----------------------------------- | ---- | --------------------------------------- |
+| PATCH  | `/location/live-location`           | JWT  | Update responder's live location        |
+| POST   | `/location/get-respondent-location` | No   | Find responders near a given coordinate |
 
 **`PATCH /location/live-location` body:**
+
 ```json
 {
   "latitude": 27.6748,
@@ -177,31 +186,33 @@ REDIS_URL=redis://localhost:6379
 
 ### Client → Server
 
-| Event              | Payload                              | Description                           |
-|--------------------|--------------------------------------|---------------------------------------|
-| `join:activeAlert` | `{ alertId: string }`                | Join responder room on connect        |
-| `alert:reject`     | `{ alertId: string, userId: string }`| Reject an incoming alert              |
-| `location:update`  | `{ userId, latitude, longitude, responderType }` | Send live location every 7s |
+| Event              | Payload                                          | Description                    |
+| ------------------ | ------------------------------------------------ | ------------------------------ |
+| `join:activeAlert` | `{ alertId: string }`                            | Join responder room on connect |
+| `alert:reject`     | `{ alertId: string, userId: string }`            | Reject an incoming alert       |
+| `location:update`  | `{ userId, latitude, longitude, responderType }` | Send live location every 7s    |
 
 ### Server → Client
 
-| Event              | Payload                              | Description                           |
-|--------------------|--------------------------------------|---------------------------------------|
-| `alert:Medic`      | Alert data                           | Alert dispatched to medics            |
-| `alert:Police`     | Alert data                           | Alert dispatched to police            |
-| `alert:FireFighter`| Alert data                           | Alert dispatched to fire fighters     |
-| `location:update`  | `{ latitude, longitude }`            | Citizen receives responder location   |
+| Event               | Payload                   | Description                         |
+| ------------------- | ------------------------- | ----------------------------------- |
+| `alert:Medic`       | Alert data                | Alert dispatched to medics          |
+| `alert:Police`      | Alert data                | Alert dispatched to police          |
+| `alert:FireFighter` | Alert data                | Alert dispatched to fire fighters   |
+| `location:update`   | `{ latitude, longitude }` | Citizen receives responder location |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - PostgreSQL
 - Redis
 
 ### Backend
+
 ```bash
 cd backend
 npm install
@@ -210,6 +221,7 @@ npm run start:dev
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
@@ -234,4 +246,3 @@ npm run dev
 4. Leaflet Routing Machine draws a live route from the responder to the citizen
 
 ---
-
