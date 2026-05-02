@@ -13,11 +13,13 @@ import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadowUrl from "leaflet/dist/images/marker-shadow.png";
 
 import RoutingMachine from "@/utilities/RoutingMachine";
+import type { AlertType } from "@/User/types";
 
 type Props = {
   position: [number, number];
   setPosition: (coords: [number, number]) => void;
   respondendPosition?: [number, number] | null;
+  alertType?: AlertType | null;
 };
 
 export type MapRef = {
@@ -44,14 +46,14 @@ const MapRecenter = ({ position }: { position: [number, number] }) => {
 };
 
 const Map = forwardRef<MapRef, Props>(
-  ({ position, setPosition, respondendPosition }, ref) => {
+  ({ position, setPosition, respondendPosition, alertType }, ref) => {
     const latestPositionRef = useRef<[number, number] | null>(position);
-
+    console.log(alertType);
     useImperativeHandle(ref, () => ({
       latestPosition: latestPositionRef.current,
     }));
 
-    const icons = useMemo(() => {
+    const icons: Record<AlertType, L.Icon> = useMemo(() => {
       return {
         FireFighter: L.icon({
           iconUrl: "/fire-truck.svg",
@@ -68,7 +70,7 @@ const Map = forwardRef<MapRef, Props>(
           iconSize: [35, 35],
           iconAnchor: [17, 35],
         }),
-      } satisfies Record<"Police" | "Medic" | "FireFighter", L.Icon>;
+      };
     }, []);
 
     useEffect(() => {
@@ -119,7 +121,11 @@ const Map = forwardRef<MapRef, Props>(
         </Marker>
 
         {respondendPosition && (
-          <RoutingMachine start={position} end={respondendPosition} />
+          <RoutingMachine
+            start={position}
+            end={respondendPosition}
+            icon={alertType ? icons[alertType] : null}
+          />
         )}
       </MapContainer>
     );

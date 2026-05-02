@@ -3,35 +3,22 @@ import { useMutation } from "@tanstack/react-query";
 import z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFetchClient } from "@/utilities/useFetchClient";
-
-const alertType = z.enum(["Medic", "FireFighter", "Police"]);
-const alertSchema = z.object({
-  user: z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    phone: z.string("Phone number should 10 digits long").length(10),
-  }),
-  alertType: alertType,
-  latitude: z
-    .number({ error: "Latitude must be a number" })
-    .min(-90, "Latitude must be ≥ -90")
-    .max(90, "Latitude must be ≤ 90"),
-  longitude: z
-    .number({ error: "Longitude must be a number" })
-    .min(-180, "Longitude must be ≥ -180")
-    .max(180, "Longitude must be ≤ 180"),
-});
+import { alertSchema, serverAddress, type AlertType } from "../types";
 
 type SendAlertData = z.infer<typeof alertSchema>;
-type AlertType = z.infer<typeof alertType>;
+
 type EmergencyAlertProps = {
+  position: [number, number];
   setAlertId: (alertId: string) => void;
   setIsAvailable: (isAvailable: boolean) => void;
+  setAlertType: (alertType: AlertType) => void;
 };
 
 const EmergencyAlert = ({
+  position,
   setAlertId,
   setIsAvailable,
+  setAlertType,
 }: EmergencyAlertProps) => {
   const { protectedFetch } = useFetchClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,20 +27,21 @@ const EmergencyAlert = ({
   const sendAlerts = async (alertType: AlertType) => {
     const data = {
       user: user,
-      latitude: 27.5878,
-      longitude: 85.3213,
+      latitude: position[0],
+      longitude: position[1],
       alertType: alertType,
     };
     const result = alertSchema.safeParse(data);
 
     if (result.success) {
+      setAlertType(alertType);
       return mutate(result.data);
     }
     return console.log(result.error);
   };
 
   const sendAlertToServer = async (data: SendAlertData) => {
-    const res = await protectedFetch("http://localhost:3000/alert/send-alert", {
+    const res = await protectedFetch(`${serverAddress}/alert/send-alert`, {
       method: "POST",
       body: JSON.stringify(data),
     });

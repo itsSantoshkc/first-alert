@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useFetchClient } from "@/utilities/useFetchClient";
 import { useMutation } from "@tanstack/react-query";
 import z from "zod";
+import { serverAddress } from "@/User/types";
 
 const alertType = z.enum(["Medic", "FireFighter", "Police"]);
 
@@ -33,8 +34,8 @@ const Homepage = () => {
   const role = user?.role;
 
   const positonRef = useRef<MapRef>(null);
-
   const [position, setPosition] = useState<[number, number]>(DEFAULT_POSITION);
+
   const [userPosition, setUserPosition] = useState<[number, number] | null>(
     null,
   );
@@ -44,13 +45,10 @@ const Homepage = () => {
     mutationFn: async (data: AcceptAlertData) => {
       setIsActivelyResponding(true);
       console.log(data);
-      const res = await protectedFetch(
-        "http://localhost:3000/alert/accept-alert",
-        {
-          method: "PATCH",
-          body: JSON.stringify(data),
-        },
-      );
+      const res = await protectedFetch(`${serverAddress}alert/accept-alert`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
 
       if (!res.ok) {
         setIsActivelyResponding(false);
@@ -72,7 +70,7 @@ const Homepage = () => {
   const { mutate: updateLocation } = useMutation({
     mutationFn: async (coords: { latitude: number; longitude: number }) => {
       const res = await protectedFetch(
-        "http://localhost:3000/location/live-location",
+        `${serverAddress}location/live-location`,
         {
           method: "PATCH",
           body: JSON.stringify({ ...coords, responderType: role }),

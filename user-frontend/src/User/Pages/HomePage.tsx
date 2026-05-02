@@ -3,10 +3,11 @@ import EmergencyAlert from "../components/EmergencyAlert";
 import { socket } from "@/lib/socket";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
+import type { AlertType } from "../types";
 
 const Homepage = () => {
   const { user } = useAuth();
-
+  console.log(import.meta.env.VITE_SERVER_ADDRESS);
   const [position, setPosition] = useState<[number, number]>([
     27.5878, 85.3213,
   ]);
@@ -15,20 +16,10 @@ const Homepage = () => {
   >(null);
 
   const [alertId, setAlertId] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<AlertType | null>(null);
   const [isAvailable, setIsAvailable] = useState(true);
 
   const userId = user?.userId;
-
-  // Emit location updates
-  useEffect(() => {
-    if (!userId || !isAvailable) return;
-
-    const interval = setInterval(() => {
-      socket.emit("location:update", { userId, position });
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [userId, position, isAvailable]);
 
   useEffect(() => {
     if (!userId) return;
@@ -65,10 +56,17 @@ const Homepage = () => {
           position={position}
           setPosition={setPosition}
           respondendPosition={responderPosition}
+          alertType={alertType}
         />
       </div>
-
-      <EmergencyAlert setAlertId={setAlertId} setIsAvailable={setIsAvailable} />
+      {isAvailable && (
+        <EmergencyAlert
+          position={position}
+          setAlertType={setAlertType}
+          setAlertId={setAlertId}
+          setIsAvailable={setIsAvailable}
+        />
+      )}
     </>
   );
 };
