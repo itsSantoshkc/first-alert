@@ -80,11 +80,7 @@ const Map = forwardRef<MapRef, Props>(
             pos.coords.latitude,
             pos.coords.longitude,
           ];
-
-          // updates instantly (no delay)
           latestPositionRef.current = coords;
-
-          // updates react state (async)
           setPosition(coords);
         },
         (err) => {
@@ -97,7 +93,7 @@ const Map = forwardRef<MapRef, Props>(
       );
 
       return () => navigator.geolocation.clearWatch(watchId);
-    }, [setPosition]);
+    }, []);
 
     return (
       <MapContainer

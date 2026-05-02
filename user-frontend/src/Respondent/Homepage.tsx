@@ -109,7 +109,7 @@ const Homepage = () => {
       console.error(result.error);
       return;
     }
-
+    setUserPosition([data.location.latitude, data.location.longitude]);
     acceptAlertMutate(result.data);
   };
 
@@ -161,7 +161,6 @@ const Homepage = () => {
     if (!role) return;
 
     const handleAlert = (data: any) => {
-      console.log(data);
       if (isActivelyResponding) return;
 
       toast(
