@@ -1,4 +1,4 @@
-# FirstAlert / RespondNow — Emergency Response Platform
+# FirstAlert  — Emergency Response Platform
 
 A real-time emergency response application that connects citizens in distress with nearby first responders (Police, Fire Fighters, Medics). Built with **React + Vite** on the frontend and **NestJS** on the backend.
 
