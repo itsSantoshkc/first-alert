@@ -8,7 +8,7 @@ export const alertSchema = z.object({
   user: z.object({
     firstName: z.string(),
     lastName: z.string(),
-    phone: z.string("Phone number should 10 digits long").length(10),
+    phone: z.string().length(10, "Phone number should be 10 digits long"),
   }),
   alertType: alertType,
   latitude: z
@@ -19,6 +19,10 @@ export const alertSchema = z.object({
     .number({ error: "Longitude must be a number" })
     .min(-180, "Longitude must be ≥ -180")
     .max(180, "Longitude must be ≤ 180"),
+});
+
+export const acceptAlertSchema = alertSchema.extend({
+  socketId: z.string(),
 });
 
 export const serverAddress =

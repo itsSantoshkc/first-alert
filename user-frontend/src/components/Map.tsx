@@ -48,7 +48,6 @@ const MapRecenter = ({ position }: { position: [number, number] }) => {
 const Map = forwardRef<MapRef, Props>(
   ({ position, setPosition, respondendPosition, alertType }, ref) => {
     const latestPositionRef = useRef<[number, number] | null>(position);
-    console.log(alertType);
     useImperativeHandle(ref, () => ({
       latestPosition: latestPositionRef.current,
     }));

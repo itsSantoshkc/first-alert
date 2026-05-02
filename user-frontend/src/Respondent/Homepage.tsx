@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Map, { type MapRef } from "../components/Map";
 import { socket } from "../lib/socket";
 import { useAuth } from "../contexts/AuthContext";
@@ -6,21 +6,7 @@ import { toast } from "sonner";
 import { useFetchClient } from "@/utilities/useFetchClient";
 import { useMutation } from "@tanstack/react-query";
 import z from "zod";
-import { serverAddress } from "@/User/types";
-
-const alertType = z.enum(["Medic", "FireFighter", "Police"]);
-
-const acceptAlertSchema = z.object({
-  user: z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    phone: z.string().length(10, "Phone number should 10 digits long"),
-  }),
-  alertType,
-  socketId: z.string(),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
-});
+import { acceptAlertSchema, serverAddress } from "@/User/types";
 
 type AcceptAlertData = z.infer<typeof acceptAlertSchema>;
 
@@ -35,7 +21,6 @@ const Homepage = () => {
 
   const positonRef = useRef<MapRef>(null);
   const [position, setPosition] = useState<[number, number]>(DEFAULT_POSITION);
-
   const [userPosition, setUserPosition] = useState<[number, number] | null>(
     null,
   );
@@ -44,8 +29,7 @@ const Homepage = () => {
   const { mutate: acceptAlertMutate } = useMutation({
     mutationFn: async (data: AcceptAlertData) => {
       setIsActivelyResponding(true);
-      console.log(data);
-      const res = await protectedFetch(`${serverAddress}alert/accept-alert`, {
+      const res = await protectedFetch(`${serverAddress}/alert/accept-alert`, {
         method: "PATCH",
         body: JSON.stringify(data),
       });
@@ -58,7 +42,7 @@ const Homepage = () => {
       return res.json();
     },
     onSuccess: (data) => {
-      console.log("Alert accepted:", data);
+      localStorage.setItem("alertId", data.alertId);
       toast.dismiss();
     },
     onError: (err) => {
@@ -70,7 +54,7 @@ const Homepage = () => {
   const { mutate: updateLocation } = useMutation({
     mutationFn: async (coords: { latitude: number; longitude: number }) => {
       const res = await protectedFetch(
-        `${serverAddress}location/live-location`,
+        `${serverAddress}/location/live-location`,
         {
           method: "PATCH",
           body: JSON.stringify({ ...coords, responderType: role }),
@@ -84,44 +68,48 @@ const Homepage = () => {
     onError: (err) => console.error("Location update failed:", err.message),
   });
 
-  const acceptAlert = (data: any) => {
-    if (!user) return;
+  const rejectAlert = useCallback(
+    (alertId: string) => {
+      if (!userId) return;
+      socket.emit("alert:reject", { alertId, userId });
+      toast.dismiss();
+    },
+    [userId],
+  );
 
-    const latestPosition = positonRef?.current?.latestPosition;
+  const acceptAlert = useCallback(
+    (data: any) => {
+      if (!user) return;
 
-    if (!latestPosition) {
-      return;
-    }
-    toast.dismiss();
-    const alertData = {
-      user,
-      latitude: latestPosition[0],
-      longitude: latestPosition[1],
-      alertType: data.alertType,
-      socketId: data.socketId,
-    };
+      const latestPosition = positonRef?.current?.latestPosition;
+      if (!latestPosition) return;
 
-    const result = acceptAlertSchema.safeParse(alertData);
+      toast.dismiss();
 
-    if (!result.success) {
-      console.error(result.error);
-      return;
-    }
-    setUserPosition([data.location.latitude, data.location.longitude]);
-    acceptAlertMutate(result.data);
-  };
+      const alertData = {
+        user,
+        latitude: latestPosition[0],
+        longitude: latestPosition[1],
+        alertType: data.alertType,
+        socketId: data.socketId,
+      };
 
-  const rejectAlert = (alertId: string) => {
-    if (!userId) return;
+      const result = acceptAlertSchema.safeParse(alertData);
 
-    socket.emit("alert:reject", { alertId, userId });
-    toast.dismiss();
-  };
+      if (!result.success) {
+        console.error(result.error);
+        return;
+      }
+
+      setUserPosition([data.location.latitude, data.location.longitude]);
+      acceptAlertMutate(result.data);
+    },
+    [user, acceptAlertMutate],
+  );
 
   // Connect socket only once
   useEffect(() => {
     socket.connect();
-
     return () => {
       socket.disconnect();
     };
@@ -134,7 +122,6 @@ const Homepage = () => {
     };
 
     socket.on("connect", handleConnect);
-
     return () => {
       socket.off("connect", handleConnect);
     };
@@ -142,18 +129,22 @@ const Homepage = () => {
 
   // Listen for location updates
   useEffect(() => {
-    const handleLocationUpdate = (data: any) => {
-      if (!data) return;
-      setUserPosition([data.latitude, data.longitude]);
-    };
+    if (!isActivelyResponding || !userId || !role) return;
 
-    socket.on("location:update", handleLocationUpdate);
+    const interval = setInterval(() => {
+      const latestPosition = positonRef?.current?.latestPosition;
+      if (!latestPosition) return;
 
-    return () => {
-      socket.off("location:update", handleLocationUpdate);
-    };
-  }, []);
+      socket.emit("location:update", {
+        userId,
+        latitude: latestPosition[0],
+        longitude: latestPosition[1],
+        responderType: role,
+      });
+    }, 7000);
 
+    return () => clearInterval(interval);
+  }, [isActivelyResponding, userId, role]);
   // Listen for alerts
   useEffect(() => {
     if (!role) return;
@@ -204,27 +195,24 @@ const Homepage = () => {
     };
 
     socket.on(`alert:${role}`, handleAlert);
-
     return () => {
       socket.off(`alert:${role}`, handleAlert);
     };
-  }, [role, isActivelyResponding]);
+  }, [role, isActivelyResponding, acceptAlert, rejectAlert]);
 
-  // Send live location every 5 seconds ONLY if responding
-  // useEffect(() => {
-  //   if (!userId || !role) return;
+  // Send live location every 5 seconds ONLY if actively responding
+  useEffect(() => {
+    if (!isActivelyResponding || !userId || !role) return;
 
-  //   const interval = setInterval(() => {
-  //     // socket.emit("location:update", { userId, position });
+    const interval = setInterval(() => {
+      updateLocation({
+        latitude: position[0],
+        longitude: position[1],
+      });
+    }, 5000);
 
-  //     updateLocation({
-  //       latitude: position[0],
-  //       longitude: position[1],
-  //     });
-  //   }, 5000);
-
-  //   return () => clearInterval(interval);
-  // }, [userId, role, isActivelyResponding, position, updateLocation]);
+    return () => clearInterval(interval);
+  }, [isActivelyResponding, userId, role, position, updateLocation]);
 
   if (!userId || !role) return null;
 

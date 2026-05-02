@@ -7,7 +7,6 @@ import type { AlertType } from "../types";
 
 const Homepage = () => {
   const { user } = useAuth();
-  console.log(import.meta.env.VITE_SERVER_ADDRESS);
   const [position, setPosition] = useState<[number, number]>([
     27.5878, 85.3213,
   ]);
@@ -27,13 +26,19 @@ const Homepage = () => {
     socket.connect();
 
     const handleConnect = () => {
+      const localAlertId = localStorage.getItem("alertId");
+      if (localAlertId) {
+        socket.emit("join:activeAlert", { localAlertId });
+      }
       if (alertId) {
         socket.emit("join:activeAlert", { alertId });
+        localStorage.setItem("alertId", alertId);
       }
     };
 
     const handleLocationUpdate = (data: any) => {
       if (!data) return;
+      console.log(data);
       setResponderPosition([data.latitude, data.longitude]);
     };
 
